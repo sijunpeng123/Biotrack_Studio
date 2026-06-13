@@ -1,0 +1,14 @@
+{
+  "cellpose_cyto_online_test": {
+    "name": "Cellpose Cyto Online Test",
+    "category": "segmentation",
+    "description": "Online store test entry for Cellpose cyto.",
+    "python_version": "3.10",
+    "dependencies": [
+      "cellpose==2.2.3",
+      "numpy==1.26.4",
+      "tifffile"
+    ],
+    "core_code": "try:\n    from cellpose import models\n    model = models.Cellpose(gpu=True, model_type='cyto')\nexcept AttributeError:\n    from cellpose.models import Cellpose\n    model = Cellpose(gpu=True, model_type='cyto')\nfinal_mask, _, _, _ = model.eval(list(img), diameter=None, channels=[0, 0])"
+  }
+}

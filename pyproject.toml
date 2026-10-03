@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biotrack_studio"
+version = "1.0.0"
+description = "A cross-platform napari workspace for cell segmentation, tracking, consensus-assisted review, and manual correction"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10,<3.12"
+dependencies = [
+    "napari[all]>=0.5.0,<0.6", 
+    "magicgui>=0.8.0", 
+    "tifffile>=2021.8.30,<2023.3.15",
+    "numpy>=1.23,<1.24",
+    "imagecodecs>=2023.1.23",
+    "pandas>=1.5,<2.1",
+    "matplotlib>=3.7,<3.11",
+    "platformdirs>=4.0",
+    "requests>=2.31.0"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+
+[project.urls]
+Homepage = "https://github.com/sijunpeng123/Biotrack_Studio"
+Repository = "https://github.com/sijunpeng123/Biotrack_Studio"
+Issues = "https://github.com/sijunpeng123/Biotrack_Studio/issues"
+
+[project.entry-points."napari.manifest"]
+biotrack_studio = "biotrack_studio:napari.yaml"
+
+[tool.setuptools]
+packages = ["biotrack_studio"]
+
+[tool.setuptools.package-data]
+"biotrack_studio" = ["napari.yaml", "registry.json", "cloud_algos.json"]

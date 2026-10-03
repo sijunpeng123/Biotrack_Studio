@@ -1,0 +1,20 @@
+BioTrack Studio demo data
+
+Dataset: HeLa timelapse (H2B-mCherry, Digital Phase Contrast)
+Creator: Romain Guiet
+Source: https://doi.org/10.5281/zenodo.4700067
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License text: https://creativecommons.org/licenses/by/4.0/
+
+Source file: H2BmCherry_timelapse_05h.tif
+Source file MD5: 9e504e48d28016bc708212e670c57290
+Source time points: 59 to 78 of the original experiment, acquired every 15 minutes
+
+Changes made for this demo:
+- retained all 20 consecutive time points from the 5-hour source file;
+- cropped every frame to rows 320:700 and columns 280:650;
+- saved the resulting frames as t000.tif through t019.tif;
+- did not alter pixel intensities.
+
+The cropped sequence is redistributed under CC BY 4.0 for software demonstration.
+It is not ground truth and must not be used as proof of segmentation or tracking accuracy.

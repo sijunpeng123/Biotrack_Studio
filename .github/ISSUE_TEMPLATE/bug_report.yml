@@ -1,0 +1,79 @@
+name: Bug report
+description: Report a reproducible installation or workflow problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. Do not upload confidential microscopy data.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS Apple Silicon
+        - macOS Intel
+        - Linux local workstation
+        - Linux remote server
+    validations:
+      required: true
+  - type: input
+    id: checksum
+    attributes:
+      label: Release ZIP checksum or download date
+      description: Use SHA256SUMS.txt when available.
+    validations:
+      required: true
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Workflow
+      options:
+        - Installation or launch
+        - Cell Analysis Pipeline
+        - Tracking consensus
+        - Mask consensus
+        - MMV_H4Tracks correction
+        - napari-amdtrk correction
+        - Algorithm Store
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the buttons selected and the order of actions.
+      placeholder: |
+        1. Opened...
+        2. Selected...
+        3. The problem appeared when...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant log text
+      description: Remove usernames, private paths, and sensitive data before posting.
+      render: shell
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I confirmed that this report contains no confidential microscopy data or personal information.
+          required: true

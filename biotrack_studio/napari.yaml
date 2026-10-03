@@ -1,0 +1,20 @@
+name: biotrack_studio
+display_name: BioTrack Studio
+contributions:
+  commands:
+    - id: biotrack_studio.make_widget
+      python_name: biotrack_studio.widget:make_cell_widget
+      title: Open BioTrack Studio
+    - id: biotrack_studio.make_store_widget
+      python_name: biotrack_studio.store_widget:make_store_widget
+      title: Open Algorithm Store
+    - id: biotrack_studio.make_correction_widget
+      python_name: biotrack_studio.widget:make_correction_widget
+      title: Open Manual Correction
+  widgets:
+    - command: biotrack_studio.make_widget
+      display_name: Cell Analysis Pipeline
+    - command: biotrack_studio.make_store_widget
+      display_name: Algorithm Store
+    - command: biotrack_studio.make_correction_widget
+      display_name: Manual Correction

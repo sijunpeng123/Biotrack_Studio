@@ -1,0 +1,31 @@
+{
+    "segmentation": {
+        "cellpose_cyto": {
+            "env": "env_segmentation_cellpose_cyto",
+            "script": "step_segmentation_cellpose_cyto.py"
+        },
+        "cellpose_nuclei": {
+            "env": "env_segmentation_cellpose_nuclei",
+            "script": "step_segmentation_cellpose_nuclei.py"
+        },
+        "stardist": {
+            "env": "env_segmentation_stardist",
+            "script": "step_segmentation_stardist.py"
+        }
+    },
+    "tracking": {
+        "sctrack": {
+            "env": "env_tracking_sctrack",
+            "script": "step_tracking_sctrack.py"
+        },
+        "trackpy": {
+            "env": "env_tracking_trackpy",
+            "script": "step_tracking_trackpy.py"
+        },
+        "ultrack": {
+            "env": "env_tracking_ultrack",
+            "script": "step_tracking_ultrack.py"
+        }
+    },
+    "correction": {}
+}

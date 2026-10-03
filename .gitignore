@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+build/
+dist/
+.DS_Store
+BioTrack_Studio_install_log.txt
+consensus_assist/
+out/

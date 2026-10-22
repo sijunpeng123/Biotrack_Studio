@@ -7,7 +7,7 @@ on:
 jobs:
   consensus-unit-tests:
     env:
-      QT_QPA_PLATFORM: ${{ runner.os == 'macOS' && 'cocoa' || 'offscreen' }}
+      QT_QPA_PLATFORM: ${{ matrix.os == 'macos-latest' && 'cocoa' || 'offscreen' }}
       PYTHONNOUSERSITE: "1"
     strategy:
       fail-fast: false

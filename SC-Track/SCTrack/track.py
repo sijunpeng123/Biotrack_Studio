@@ -43,18 +43,3 @@ def start_track(fannotation: str | dict, fout, basename, track_range=None, fimag
                          mcy=fimage,
                          save_visualize=export_visualization, visualize_background_image=fimage,
                          basename=basename)
-
-
-if __name__ == '__main__':
-    # i = 8
-    # annotation = rf"G:\paper\test\Data{i}\SEG.tif"
-    # mcy_img = rf"G:\paper\test\Data{i}\01.tif"
-    # start_track(annotation, rf"G:\paper\test\Data{i}", 'mcy', 1000,
-    #             mcy_img)
-
-    image = r"G:\paper\evaluate_data\evaluate_for_tracking\parameter_test_incorrect\!test_data\rpe19.tif"
-    annotation = r"G:\paper\evaluate_data\evaluate_for_tracking\parameter_test_incorrect\!test_data\result.json"
-
-    outputdir = fr"G:\paper\evaluate_data\evaluate_for_tracking\parameter_test_incorrect\GAP_WINDOW_LEN\10"
-    start_track(annotation, outputdir, 'rpe19', None, image, export_visualization=False)
-    # break

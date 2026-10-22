@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PIL import Image as PILImage
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -410,7 +410,6 @@ def parse_markdown(path: Path, styles):
             index += 1
             continue
         if line.startswith("```"):
-            language = line[3:].strip()
             index += 1
             code = []
             while index < len(lines) and not lines[index].strip().startswith("```"):

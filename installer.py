@@ -1,4 +1,7 @@
-import os, subprocess, shutil, platform
+import os
+import subprocess
+import shutil
+import platform
 
 os.environ.setdefault("PYTHONNOUSERSITE", "1")
 
@@ -34,7 +37,7 @@ def get_hardware():
         try:
             subprocess.check_output(["nvidia-smi"], universal_newlines=True)
             return "cuda"
-        except:
+        except (OSError, subprocess.CalledProcessError):
             pass
     return "cpu"
 
@@ -105,9 +108,9 @@ def _expected_correction_modules(plugin_name):
 def install_algorithm(algo_name, category, dependencies, script_content):
     env_name, script_name = f"env_{category}_{algo_name}", f"step_{category}_{algo_name}.py"
     print(f"\n[Build] Constructing isolated environment {env_name}...")
-    
+
     conda_cmd = get_conda_cmd()
-    
+
     expected_modules = _expected_modules(category, algo_name)
     environment_exists = env_exists(env_name)
     dependencies_ready = environment_exists and _imports_ready(
@@ -125,7 +128,7 @@ def install_algorithm(algo_name, category, dependencies, script_content):
             print("[Build] Global conda failed. Switching to mirror proxy...")
             tsinghua_conda = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/"
             subprocess.run([conda_cmd, "create", "-n", env_name, "python=3.10", "git", "-c", tsinghua_conda, "-y"], check=True, env=get_subprocess_env())
-         
+
     deps_list = []
     for dep in dependencies.split():
         dep_path = PROJECT_ROOT / dep
@@ -138,22 +141,22 @@ def install_algorithm(algo_name, category, dependencies, script_content):
 
         # Phase 2: Deep learning framework injection
         if "stardist" in algo_name and platform.system() == "Darwin":
-            print(f"[Build] Injecting TensorFlow for Mac...")
+            print("[Build] Injecting TensorFlow for Mac...")
             _pip_install(conda_cmd, env_name, ["tensorflow"])
         elif hw_type == "cuda":
-            print(f"[Build] Injecting framework for GPU...")
+            print("[Build] Injecting framework for GPU...")
             if "cellpose" in algo_name or "cellsam" in algo_name:
                 _pip_install(conda_cmd, env_name, ["torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cu118"])
             elif "stardist" in algo_name:
                 _pip_install(conda_cmd, env_name, ["tensorflow[and-cuda]"])
         elif hw_type == "mps":
-            print(f"[Build] Injecting framework for Mac...")
+            print("[Build] Injecting framework for Mac...")
             if "cellpose" in algo_name or "cellsam" in algo_name:
                 _pip_install(conda_cmd, env_name, ["torch", "torchvision"])
             elif "stardist" in algo_name:
                 _pip_install(conda_cmd, env_name, ["tensorflow"])
         else:
-            print(f"[Build] Falling back to CPU mode...")
+            print("[Build] Falling back to CPU mode...")
             if "stardist" in algo_name:
                 _pip_install(conda_cmd, env_name, ["tensorflow-cpu"])
 
@@ -162,10 +165,10 @@ def install_algorithm(algo_name, category, dependencies, script_content):
         # Phase 3: Algorithm dependencies installation with fallback
         if clean_deps:
             try:
-                print(f"[Build] Attempting global pip installation...")
+                print("[Build] Attempting global pip installation...")
                 _pip_install(conda_cmd, env_name, clean_deps)
             except subprocess.CalledProcessError:
-                print(f"[Build] Global pip failed. Switching to mirror proxies...")
+                print("[Build] Global pip failed. Switching to mirror proxies...")
 
                 mirror_deps = []
                 for dep in clean_deps:
@@ -178,17 +181,17 @@ def install_algorithm(algo_name, category, dependencies, script_content):
                 _pip_install(conda_cmd, env_name, ["-i", tsinghua_pip] + mirror_deps)
 
         _verify_imports(conda_cmd, env_name, expected_modules)
-             
+
     ensure_user_dirs()
     script_path = USER_ALGO_DIR / script_name
     with script_path.open("w", encoding="utf-8") as f:
         f.write(script_content.strip())
-             
+
     reg = load_registry()
     reg.setdefault(category, {})
     reg[category][algo_name] = {"env": env_name, "script": script_name}
     save_registry(reg)
-             
+
     print(f"[Success] {algo_name} deployed.\n")
 
 def install_correction_plugin(

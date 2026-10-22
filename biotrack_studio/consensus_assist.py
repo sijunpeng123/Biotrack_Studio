@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -23,6 +22,11 @@ from .consensus_core import (
     run_consensus,
 )
 
+
+try:
+    from ._runtime_helpers import _find_conda_executable, _unique_run_dir
+except ImportError:
+    from _runtime_helpers import _find_conda_executable, _unique_run_dir
 
 ProgressCallback = Callable[[str], None]
 CancelCheck = Callable[[], bool]
@@ -138,30 +142,6 @@ def track_coverage(normalized: pd.DataFrame, mask_object_count: int) -> dict:
     }
 
 
-def _find_conda_executable() -> Path:
-    candidates = []
-    for name in ("CONDA_EXE", "MAMBA_EXE"):
-        if os.environ.get(name):
-            candidates.append(Path(os.environ[name]))
-    home = Path.home()
-    candidates.extend(
-        [
-            home / "miniconda3" / "Scripts" / "conda.exe",
-            home / "anaconda3" / "Scripts" / "conda.exe",
-            home / "miniforge3" / "Scripts" / "conda.exe",
-            home / "miniconda3" / "bin" / "conda",
-            home / "miniforge3" / "bin" / "conda",
-        ]
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    located = shutil.which("conda") or shutil.which("mamba")
-    if located:
-        return Path(located)
-    raise FileNotFoundError("Conda executable was not found")
-
-
 def _trackpy_registration() -> dict:
     from biotrack_studio.paths import load_registry, resolve_algorithm_script
 
@@ -172,17 +152,6 @@ def _trackpy_registration() -> dict:
     if not info.get("env") or not script.is_file():
         raise RuntimeError("TrackPy environment or launcher script is unavailable")
     return {**info, "script": str(script)}
-
-
-def _unique_run_dir(root: Path) -> Path:
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    candidate = root / timestamp
-    suffix = 1
-    while candidate.exists():
-        candidate = root / f"{timestamp}_{suffix}"
-        suffix += 1
-    candidate.mkdir(parents=True)
-    return candidate
 
 
 def run_trackpy_reference(

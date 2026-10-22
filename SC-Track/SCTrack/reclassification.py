@@ -550,7 +550,7 @@ def track_tree_to_table(tracker: Tracker):
             series_list, new_node_list = generate_series(cell_lineage)
             for series in series_list:
                 track_detail_dataframe = track_detail_dataframe._append(series, ignore_index=True)
-    
+
     return track_detail_dataframe
 
 
@@ -673,7 +673,7 @@ def run(annotation, output_dir, basename, track_range=None, save_visualize=True,
         speed_output_filename = None
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-        
+
     tracker = run_track(annotation, track_range=xrange - 2, dic=dic, mcy=mcy, speed_filename=speed_output_filename)
     track_table_fname = os.path.join(output_dir, 'track.csv')
     track_visualization_fname = os.path.join(output_dir, 'track_visualization.tif')
@@ -693,24 +693,3 @@ def run(annotation, output_dir, basename, track_range=None, save_visualize=True,
         imagef = tifffile.imread(visualize_background_image)
         img  = refiner.generate_track_visualisation_from_df(refined_track_df, imagef)
         tifffile.imwrite(track_visualization_fname, img)
-
-
-if __name__ == '__main__':
-    annotation = r"G:\CTC dataset\Fluo-N2DL-HeLa\Fluo-N2DL-HeLa\01_ST\test.json"
-    mcy_img = r"G:\CTC dataset\Fluo-N2DL-HeLa\Fluo-N2DL-HeLa\01_ST\SEG.tif"
-    dic_img = r"G:\CTC dataset\Fluo-N2DL-HeLa\Fluo-N2DL-HeLa\01_ST\SEG.tif"
-    # tracker = run_track(r'G:\paper\evaluate_data\copy_of_1_xy10\result-GT.json', track_range=10)
-    # tracker = run_track(annotation, track_range=30)
-    # background_filename_list = [os.path.join(r'G:\paper\evaluate_data\copy_of_1_xy10\tif-seq', i) for i in
-    #                             os.listdir(r'G:\paper\evaluate_data\copy_of_1_xy10\tif-seq')]
-    # print(background_filename_list)
-    # for i in tracker.trees:
-    #     print(i)
-    # tracker.visualize_single_tree(tree=tracker.trees[51],
-    #                               save_dir=r'G:\paper\evaluate_data\copy_of_1_xy10\single_tree_visualize',
-    #                               background_filename_list=background_filename_list, xrange=10)
-
-    run(annotation=annotation, output_dir=r"G:\CTC dataset\Fluo-N2DL-HeLa\Fluo-N2DL-HeLa\01_ST",
-        track_range=None, dic=None, mcy=mcy_img,
-        save_visualize=True, visualize_background_image=mcy_img,
-        track_to_json=True, basename=r'man_seg')

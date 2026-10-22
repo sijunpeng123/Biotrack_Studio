@@ -15,6 +15,11 @@ The release archive also contains a copy of the SC-Track source distribution,
 including its original `SC-Track/LICENSE` file. SC-Track is licensed under the
 GNU General Public License version 3.
 
+In the 2026-10-22 source cleanup, standalone demonstration blocks containing
+machine-specific paths were removed from `SCTrack/track.py`, `utils.py`,
+`prepare.py`, and `reclassification.py`. Tracking functions, algorithm parameters,
+copyright notices, and license terms were retained.
+
 The complete cross-platform release archive bundles unmodified Miniforge
 installers for Windows, macOS, and Linux. Miniforge installer code is licensed
 under the BSD 3-Clause License. Packages installed by Miniforge have their own

@@ -19,7 +19,6 @@ class SafeRunner:
         cmd = [env_cmd, "run", "--no-capture-output", "-n", env_name, "python", script_path] + args
         output_dir = SafeRunner._infer_output_dir(args)
         log_path = SafeRunner._make_log_path(output_dir, step_name)
-        last_lines = []
 
         try:
             process = subprocess.Popen(
@@ -59,10 +58,10 @@ class SafeRunner:
                 log_file.flush()
 
                 while process.poll() is None:
-                    SafeRunner._drain_output(output_queue, log_file, last_lines)
+                    SafeRunner._drain_output(output_queue, log_file)
                     elapsed = SafeRunner._format_elapsed(time.time() - start)
                     dialog.setLabelText(
-                        SafeRunner._format_status_text(step_name, env_name, elapsed, last_lines, log_path)
+                        SafeRunner._format_status_text(step_name, elapsed)
                     )
                     QApplication.processEvents()
 
@@ -77,7 +76,7 @@ class SafeRunner:
 
                     time.sleep(0.2)
 
-                SafeRunner._drain_output(output_queue, log_file, last_lines)
+                SafeRunner._drain_output(output_queue, log_file)
                 dialog.close()
 
             if process.returncode == 0:
@@ -100,7 +99,7 @@ class SafeRunner:
             output_queue.put(line.rstrip())
 
     @staticmethod
-    def _drain_output(output_queue, log_file, last_lines):
+    def _drain_output(output_queue, log_file):
         while True:
             try:
                 line = output_queue.get_nowait()
@@ -108,8 +107,6 @@ class SafeRunner:
                 break
             log_file.write(line + "\n")
             log_file.flush()
-            last_lines.append(line)
-            del last_lines[:-20]
 
     @staticmethod
     def _infer_output_dir(args):
@@ -138,16 +135,9 @@ class SafeRunner:
         return f"{hours:02d}:{minutes:02d}:{sec:02d}"
 
     @staticmethod
-    def _format_status_text(step_name, env_name, elapsed, last_lines, log_path):
+    def _format_status_text(step_name, elapsed):
         return (
             f"Running: {step_name}\n"
             f"Elapsed: {elapsed}\n"
             "This may take several minutes. Please keep napari open."
         )
-
-    @staticmethod
-    def _truncate_line(line, limit=140):
-        line = str(line)
-        if len(line) <= limit:
-            return line
-        return line[: limit - 3] + "..."

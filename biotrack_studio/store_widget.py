@@ -1,4 +1,16 @@
-import hashlib, io, json, os, platform, queue, re, shutil, subprocess, tempfile, threading, time, zipfile
+import hashlib
+import io
+import json
+import os
+import platform
+import queue
+import re
+import shutil
+import subprocess
+import tempfile
+import threading
+import time
+import zipfile
 from pathlib import Path
 import requests
 from magicgui import magic_factory
@@ -206,7 +218,8 @@ def get_installed_algos(*args):
                 if info.get("source") == "online_store"
             )
         return base_options + installed if installed else base_options
-    except: return base_options
+    except Exception:
+        return base_options
 
 def _refresh_store_widget_choices():
     for widget in list(STORE_WIDGETS):
@@ -496,7 +509,8 @@ with open(os.path.join(output_dir, "config.yaml"), "w", encoding="utf-8") as str
     return header + core_code + "\n" + normalization.lstrip()
 
 def install_from_cloud(algo_id):
-    if algo_id not in CLOUD_APP_STORE: raise ValueError(f"Algorithm {algo_id} not found.")
+    if algo_id not in CLOUD_APP_STORE:
+        raise ValueError(f"Algorithm {algo_id} not found.")
     info = CLOUD_APP_STORE[algo_id]
     category = info["category"]
     existing_registry = load_registry()
@@ -556,7 +570,7 @@ def install_from_cloud(algo_id):
                 os.remove(req_path)
             except OSError:
                 pass
-         
+
     try:
         _verify_cloud_imports(env_cmd, env_name, info, log_path)
 
@@ -738,7 +752,6 @@ def _make_store_log_path(algo_id):
 
 def _run_install_command(cmd, title, log_path):
     output_queue = queue.Queue()
-    recent_lines = []
 
     dialog = QProgressDialog(title, "Cancel", 0, 0)
     dialog.setWindowTitle("BioTrack Studio Algorithm Store")
@@ -772,10 +785,10 @@ def _run_install_command(cmd, title, log_path):
 
         start = time.time()
         while process.poll() is None:
-            _drain_output(output_queue, log_file, recent_lines)
+            _drain_output(output_queue, log_file)
             elapsed = _format_elapsed(time.time() - start)
             dialog.setLabelText(
-                _format_install_status(title, elapsed, recent_lines, log_path)
+                _format_install_status(title, elapsed)
             )
             QApplication.processEvents()
 
@@ -789,7 +802,7 @@ def _run_install_command(cmd, title, log_path):
 
             time.sleep(0.2)
 
-        _drain_output(output_queue, log_file, recent_lines)
+        _drain_output(output_queue, log_file)
         dialog.close()
 
         if process.returncode != 0:
@@ -803,7 +816,7 @@ def _read_process_output(process, output_queue):
     for line in process.stdout:
         output_queue.put(line.rstrip())
 
-def _drain_output(output_queue, log_file, recent_lines):
+def _drain_output(output_queue, log_file):
     while True:
         try:
             line = output_queue.get_nowait()
@@ -811,8 +824,6 @@ def _drain_output(output_queue, log_file, recent_lines):
             break
         log_file.write(line + "\n")
         log_file.flush()
-        recent_lines.append(line)
-        del recent_lines[:-25]
 
 def _format_elapsed(seconds):
     seconds = int(seconds)
@@ -820,18 +831,13 @@ def _format_elapsed(seconds):
     hours, minutes = divmod(minutes, 60)
     return f"{hours:02d}:{minutes:02d}:{sec:02d}"
 
-def _format_install_status(title, elapsed, recent_lines, log_path):
+def _format_install_status(title, elapsed):
     return (
         f"{title}\n"
         f"Elapsed: {elapsed}\n"
         "This may take several minutes. Please keep napari open."
     )
 
-def _truncate_line(line, limit=150):
-    line = str(line)
-    if len(line) <= limit:
-        return line
-    return line[: limit - 3] + "..."
 
 def _env_exists(env_cmd, env_name):
     try:
@@ -872,7 +878,7 @@ def _on_store_widget_init(widget):
 )
 def make_store_widget(action_type: str = "1. Refresh Online Store", cloud_algo: str = "--- Please Select ---", delete_algo: str = "--- Please Select ---"):
     from napari.utils.notifications import show_info, show_error
-         
+
     if action_type.startswith("1."):
         try:
             count = refresh_cloud_catalog()
@@ -881,14 +887,17 @@ def make_store_widget(action_type: str = "1. Refresh Online Store", cloud_algo: 
             show_error(f"Refresh Error: {e}")
 
     elif action_type.startswith("2."):
-        if cloud_algo in ["--- Please Select ---", "None"]: return show_info("Please select a valid algorithm.")
+        if cloud_algo in ["--- Please Select ---", "None"]:
+            return show_info("Please select a valid algorithm.")
         try:
             install_from_cloud(cloud_algo)
             show_info(f"Installed {cloud_algo}")
-        except Exception as e: show_error(f"Error: {e}")
-             
+        except Exception as e:
+            show_error(f"Error: {e}")
+
     elif action_type.startswith("3."):
-        if delete_algo in ["--- Please Select ---", "None"]: return show_info("Please select an algorithm.")
+        if delete_algo in ["--- Please Select ---", "None"]:
+            return show_info("Please select an algorithm.")
         try:
             reg = load_registry()
             for cat in ["segmentation", "tracking", "correction"]:
@@ -900,4 +909,5 @@ def make_store_widget(action_type: str = "1. Refresh Online Store", cloud_algo: 
                         "downloaded files were kept. Reopen the Pipeline to refresh the list."
                     )
             show_error("Algorithm not found.")
-        except Exception as e: show_error(f"Uninstall Error: {e}")
+        except Exception as e:
+            show_error(f"Uninstall Error: {e}")

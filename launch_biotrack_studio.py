@@ -301,6 +301,7 @@ def sync_correction_support_files():
     ensure_user_dirs()
     source_dir = PROJECT_ROOT / "biotrack_studio"
     for name in (
+        "_runtime_helpers.py",
         "consensus_review_model.py",
         "consensus_review_panel.py",
         "mask_consensus.py",

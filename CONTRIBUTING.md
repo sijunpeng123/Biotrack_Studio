@@ -12,6 +12,9 @@ of an interface or packaging fix without separate validation and documentation.
 Before submitting a change:
 
 1. Confirm that Python files compile.
+   Run `python -m pip install ruff==0.17.1` and
+   `python .github/scripts/check_code.py` to check first-party code and generated
+   launchers. Vendored SC-Track source is excluded from first-party lint rules.
 2. Run `python -m unittest discover -s tests -v`.
 3. Test a standard Pipeline result folder.
 4. Open both supported manual correction tools.

@@ -114,43 +114,53 @@ def install_correction_plugin(
         return None
 
 
-print("============== Initializing Core Algorithms and Correction Tools ==============") 
+print("============== Initializing Core Algorithms and Correction Tools ==============")
 
-c_cyto = '''import sys, os, tifffile, numpy as np 
-img = tifffile.imread(sys.argv[1]) 
+c_cyto = '''import sys
+import os
+import tifffile
+import numpy as np
+img = tifffile.imread(sys.argv[1])
 try:
     import torch
     use_gpu = bool(torch.cuda.is_available())
 except Exception:
     use_gpu = False
-try:     
-    from cellpose import models     
-    model = models.Cellpose(gpu=use_gpu, model_type='cyto') 
-except AttributeError:     
-    from cellpose.models import Cellpose     
-    model = Cellpose(gpu=use_gpu, model_type='cyto') 
-masks, _, _, _ = model.eval(list(img), diameter=None, channels=[0,0]) 
-tifffile.imwrite(os.path.join(sys.argv[2], "mask.tif"), np.array(masks).astype(np.uint16), imagej=True)''' 
-install_algorithm("cellpose_cyto", "segmentation", "cellpose==2.2.3 numpy==1.26.4 tifffile", c_cyto) 
+try:
+    from cellpose import models
+    model = models.Cellpose(gpu=use_gpu, model_type='cyto')
+except AttributeError:
+    from cellpose.models import Cellpose
+    model = Cellpose(gpu=use_gpu, model_type='cyto')
+masks, _, _, _ = model.eval(list(img), diameter=None, channels=[0,0])
+tifffile.imwrite(os.path.join(sys.argv[2], "mask.tif"), np.array(masks).astype(np.uint16), imagej=True)'''
+install_algorithm("cellpose_cyto", "segmentation", "cellpose==2.2.3 numpy==1.26.4 tifffile", c_cyto)
 
-c_nuc = '''import sys, os, tifffile, numpy as np 
-img = tifffile.imread(sys.argv[1]) 
+c_nuc = '''import sys
+import os
+import tifffile
+import numpy as np
+img = tifffile.imread(sys.argv[1])
 try:
     import torch
     use_gpu = bool(torch.cuda.is_available())
 except Exception:
     use_gpu = False
-try:     
-    from cellpose import models     
-    model = models.Cellpose(gpu=use_gpu, model_type='nuclei') 
-except AttributeError:     
-    from cellpose.models import Cellpose     
-    model = Cellpose(gpu=use_gpu, model_type='nuclei') 
-masks, _, _, _ = model.eval(list(img), diameter=None, channels=[0,0]) 
-tifffile.imwrite(os.path.join(sys.argv[2], "mask.tif"), np.array(masks).astype(np.uint16), imagej=True)''' 
-install_algorithm("cellpose_nuclei", "segmentation", "cellpose==2.2.3 numpy==1.26.4 tifffile", c_nuc) 
+try:
+    from cellpose import models
+    model = models.Cellpose(gpu=use_gpu, model_type='nuclei')
+except AttributeError:
+    from cellpose.models import Cellpose
+    model = Cellpose(gpu=use_gpu, model_type='nuclei')
+masks, _, _, _ = model.eval(list(img), diameter=None, channels=[0,0])
+tifffile.imwrite(os.path.join(sys.argv[2], "mask.tif"), np.array(masks).astype(np.uint16), imagej=True)'''
+install_algorithm("cellpose_nuclei", "segmentation", "cellpose==2.2.3 numpy==1.26.4 tifffile", c_nuc)
 
-c_star = '''import sys, os, tifffile, numpy as np, shutil
+c_star = '''import sys
+import os
+import tifffile
+import numpy as np
+import shutil
 from pathlib import Path
 
 # --- Cross-Platform Symlink Patch for Windows ---
@@ -158,7 +168,7 @@ _original_symlink = Path.symlink_to
 def safe_symlink(self, target, target_is_directory=False):
     try:
         _original_symlink(self, target, target_is_directory)
-    except OSError: 
+    except OSError:
         if target.is_dir():
             shutil.copytree(target, self, dirs_exist_ok=True)
         else:
@@ -166,25 +176,30 @@ def safe_symlink(self, target, target_is_directory=False):
 Path.symlink_to = safe_symlink
 # ------------------------------------------------
 
-from csbdeep.utils import normalize 
-from stardist.models import StarDist2D 
-img = tifffile.imread(sys.argv[1]) 
-output_dir = sys.argv[2] 
-model = StarDist2D.from_pretrained('2D_versatile_fluo') 
-if img.ndim == 2:     
-    img_norm = normalize(img, 1, 99.8, axis=(0,1))     
-    masks, _ = model.predict_instances(img_norm) 
-else:     
-    masks = np.zeros_like(img, dtype=np.uint16)     
-    for t in range(img.shape[0]):         
-        img_norm = normalize(img[t], 1, 99.8, axis=(0,1))         
-        labels, _ = model.predict_instances(img_norm)         
-        masks[t] = labels 
-tifffile.imwrite(os.path.join(output_dir, "mask.tif"), masks.astype(np.uint16), imagej=True)''' 
-install_algorithm("stardist", "segmentation", "stardist==0.9.1 csbdeep==0.8.2 numpy==1.26.4 setuptools==80.9.0 tifffile", c_star) 
+from csbdeep.utils import normalize  # noqa: E402 - Apply the symlink patch before model imports.
+from stardist.models import StarDist2D  # noqa: E402 - Apply the symlink patch before model imports.
+img = tifffile.imread(sys.argv[1])
+output_dir = sys.argv[2]
+model = StarDist2D.from_pretrained('2D_versatile_fluo')
+if img.ndim == 2:
+    img_norm = normalize(img, 1, 99.8, axis=(0,1))
+    masks, _ = model.predict_instances(img_norm)
+else:
+    masks = np.zeros_like(img, dtype=np.uint16)
+    for t in range(img.shape[0]):
+        img_norm = normalize(img[t], 1, 99.8, axis=(0,1))
+        labels, _ = model.predict_instances(img_norm)
+        masks[t] = labels
+tifffile.imwrite(os.path.join(output_dir, "mask.tif"), masks.astype(np.uint16), imagej=True)'''
+install_algorithm("stardist", "segmentation", "stardist==0.9.1 csbdeep==0.8.2 numpy==1.26.4 setuptools==80.9.0 tifffile", c_star)
 
-c_sc = '''import sys, os, shutil, yaml, pandas as pd, numpy as np, tifffile
-output_dir = sys.argv[1] 
+c_sc = '''import sys
+import os
+import yaml
+import pandas as pd
+import numpy as np
+import tifffile
+output_dir = sys.argv[1]
 
 def labels_from_mask(mask_path, df):
     masks = tifffile.imread(mask_path)
@@ -312,32 +327,34 @@ def convert_sctrack_ids(track_df):
         mapped_parents = parent_keys.map(primary_branch_ids).fillna(0).astype(int)
         result["parentTrackId"] = mapped_parents.where(mapped_parents != result["trackId"], 0)
     return result
-try:     
-    from SCTrack.track import start_track     
-    import SCTrack.refiner      
-    def skip_visualization(*args, **kwargs): return np.zeros((10, 10), dtype=np.uint8)     
-    SCTrack.refiner.generate_track_visualisation_from_df = skip_visualization     
-    SCTRACK_AVAILABLE = True 
-except ImportError:     
-    SCTRACK_AVAILABLE = False 
-if not SCTRACK_AVAILABLE:     
-    print("SC-Track not found."); sys.exit(0) 
-cwd = os.getcwd() 
-try:     
-    os.chdir(output_dir)     
-    start_track(fannotation="mask.tif", fimage="image.tif", basename="image", fout=".", track_range=None) 
-except Exception as e:     
-    print(f"SC-Track Error: {e}") 
+try:
+    from SCTrack.track import start_track
+    import SCTrack.refiner
+    def skip_visualization(*args, **kwargs): return np.zeros((10, 10), dtype=np.uint8)
+    SCTrack.refiner.generate_track_visualisation_from_df = skip_visualization
+    SCTRACK_AVAILABLE = True
+except ImportError:
+    SCTRACK_AVAILABLE = False
+if not SCTRACK_AVAILABLE:
+    print("SC-Track not found.")
+    sys.exit(0)
+cwd = os.getcwd()
+try:
+    os.chdir(output_dir)
+    start_track(fannotation="mask.tif", fimage="image.tif", basename="image", fout=".", track_range=None)
+except Exception as e:
+    print(f"SC-Track Error: {e}")
     sys.exit(1)
-finally:     
-    os.chdir(cwd) 
-native_track_path = os.path.join(output_dir, "tracking_output", "track.csv") 
-if os.path.exists(native_track_path):     
-    track_df = pd.read_csv(native_track_path)     
+finally:
+    os.chdir(cwd)
+native_track_path = os.path.join(output_dir, "tracking_output", "track.csv")
+if os.path.exists(native_track_path):
+    track_df = pd.read_csv(native_track_path)
     if track_df.empty:
         print("SC-Track Error: tracking_output/track.csv is empty.")
         sys.exit(1)
-    if 'TrackID' in track_df.columns: track_df = track_df.rename(columns={'TrackID': 'track_id'})     
+    if 'TrackID' in track_df.columns:
+        track_df = track_df.rename(columns={'TrackID': 'track_id'})
     required_native = ['frame_index', 'track_id', 'center_x', 'center_y']
     missing = [col for col in required_native if col not in track_df.columns]
     if missing:
@@ -361,48 +378,64 @@ if os.path.exists(native_track_path):
         print(f"SC-Track Error: branch IDs are not unique within a frame: {bad}")
         sys.exit(1)
     target_cols = ['frame', 'trackId', 'state', 'continuous_label', 'Center_of_the_object_0', 'Center_of_the_object_1', 'lineageId', 'parentTrackId']
-    clean_df[target_cols].to_csv(os.path.join(output_dir, "track.csv"), index=False)     
-    with open(os.path.join(output_dir, 'config.yaml'), 'w') as f:         
+    clean_df[target_cols].to_csv(os.path.join(output_dir, "track.csv"), index=False)
+    with open(os.path.join(output_dir, 'config.yaml'), 'w') as f:
         yaml.dump({'intensity_suffix': 'image', 'mask_suffix': 'mask', 'track_suffix': 'track', 'frame_base': 0, 'stateCol': 'state'}, f)
 else:
     print("SC-Track Error: tracking_output/track.csv was not generated.")
-    sys.exit(1)''' 
+    sys.exit(1)'''
 # Note: Fixed pandas version to 2.2.3 for Python 3.10 compatibility
-install_algorithm("sctrack", "tracking", "pandas==2.2.3 opencv-python-headless==4.11.0.86 pyyaml==6.0.3 numpy==2.2.6 tifffile ./SC-Track", c_sc) 
+install_algorithm("sctrack", "tracking", "pandas==2.2.3 opencv-python-headless==4.11.0.86 pyyaml==6.0.3 numpy==2.2.6 tifffile ./SC-Track", c_sc)
 
-c_tp = '''import sys, os, tifffile, yaml, pandas as pd, numpy as np 
-from skimage.measure import regionprops 
-import trackpy as tp 
-output_dir = sys.argv[1] 
-masks = tifffile.imread(os.path.join(output_dir, "mask.tif")) 
-if masks.ndim == 2: masks = masks[np.newaxis, ...] 
-pts = [] 
-for t in range(masks.shape[0]):     
-    for p in regionprops(masks[t]):         
-        pts.append({'frame': t, 'y': p.centroid[0], 'x': p.centroid[1], 'original_cell_id': p.label}) 
-df = pd.DataFrame(pts) 
-tracks = tp.link(df, search_range=15, memory=3, t_column='frame', adaptive_step=0.95) 
-rename_map = {'frame': 'frame', 'particle': 'trackId', 'original_cell_id': 'continuous_label', 'y': 'Center_of_the_object_1', 'x': 'Center_of_the_object_0'} 
-clean_df = tracks.rename(columns=rename_map) 
+c_tp = '''import sys
+import os
+import tifffile
+import yaml
+import pandas as pd
+import numpy as np
+from skimage.measure import regionprops
+import trackpy as tp
+output_dir = sys.argv[1]
+masks = tifffile.imread(os.path.join(output_dir, "mask.tif"))
+if masks.ndim == 2:
+    masks = masks[np.newaxis, ...]
+pts = []
+for t in range(masks.shape[0]):
+    for p in regionprops(masks[t]):
+        pts.append({'frame': t, 'y': p.centroid[0], 'x': p.centroid[1], 'original_cell_id': p.label})
+df = pd.DataFrame(pts)
+tracks = tp.link(df, search_range=15, memory=3, t_column='frame', adaptive_step=0.95)
+rename_map = {'frame': 'frame', 'particle': 'trackId', 'original_cell_id': 'continuous_label', 'y': 'Center_of_the_object_1', 'x': 'Center_of_the_object_0'}
+clean_df = tracks.rename(columns=rename_map)
 if 'trackId' in clean_df.columns and clean_df['trackId'].min() <= 0:
     clean_df['trackId'] = clean_df['trackId'].astype(int) + int(1 - clean_df['trackId'].min())
-# State preservation fallback 
-if 'state' in clean_df.columns: clean_df['state'] = clean_df['state'].fillna("none") 
-else: clean_df['state'] = "none" 
-if 'continuous_label' not in clean_df.columns: clean_df['continuous_label'] = clean_df['trackId'] 
-target_cols = ['frame', 'trackId', 'state', 'continuous_label', 'Center_of_the_object_0', 'Center_of_the_object_1'] 
-for col in target_cols:     
-    if col not in clean_df.columns: clean_df[col] = 1 
-clean_df[target_cols].to_csv(os.path.join(output_dir, "track.csv"), index=False) 
-with open(os.path.join(output_dir, 'config.yaml'), 'w') as f:     
-    yaml.dump({'intensity_suffix': 'image', 'mask_suffix': 'mask', 'track_suffix': 'track', 'frame_base': 0, 'stateCol': 'state'}, f)''' 
+# State preservation fallback
+if 'state' in clean_df.columns:
+    clean_df['state'] = clean_df['state'].fillna("none")
+else:
+    clean_df['state'] = "none"
+if 'continuous_label' not in clean_df.columns:
+    clean_df['continuous_label'] = clean_df['trackId']
+target_cols = ['frame', 'trackId', 'state', 'continuous_label', 'Center_of_the_object_0', 'Center_of_the_object_1']
+for col in target_cols:
+    if col not in clean_df.columns:
+        clean_df[col] = 1
+clean_df[target_cols].to_csv(os.path.join(output_dir, "track.csv"), index=False)
+with open(os.path.join(output_dir, 'config.yaml'), 'w') as f:
+    yaml.dump({'intensity_suffix': 'image', 'mask_suffix': 'mask', 'track_suffix': 'track', 'frame_base': 0, 'stateCol': 'state'}, f)'''
 # Note: Fixed pandas version to 2.2.3 for Python 3.10 compatibility
-install_algorithm("trackpy", "tracking", "trackpy==0.7 pandas==2.2.3 scikit-image==0.25.2 pyyaml tifffile numpy==1.26.4", c_tp) 
+install_algorithm("trackpy", "tracking", "trackpy==0.7 pandas==2.2.3 scikit-image==0.25.2 pyyaml tifffile numpy==1.26.4", c_tp)
 
-c_ult = '''import sys, os, tifffile, yaml, pandas as pd, numpy as np 
-output_dir = sys.argv[1] 
-masks = tifffile.imread(os.path.join(output_dir, "mask.tif")) 
-if masks.ndim == 2: masks = masks[np.newaxis, ...] 
+c_ult = '''import sys
+import os
+import tifffile
+import yaml
+import pandas as pd
+import numpy as np
+output_dir = sys.argv[1]
+masks = tifffile.imread(os.path.join(output_dir, "mask.tif"))
+if masks.ndim == 2:
+    masks = masks[np.newaxis, ...]
 
 def labels_from_mask(df):
     labels = []
@@ -459,11 +492,12 @@ def drop_duplicate_mask_labels(df):
         print(f"Ultrack: dropping {removed} duplicate mask-label rows for amdtrk-compatible track.csv.")
     return work.drop(columns=["_mask_distance", "_original_order"]).reset_index(drop=True)
 
-try:     
-    from ultrack import track, MainConfig, to_tracks_layer     
-    from ultrack.utils import labels_to_contours 
-except ImportError:     
-    print("Ultrack not found."); sys.exit(0) 
+try:
+    from ultrack import track, MainConfig, to_tracks_layer
+    from ultrack.utils import labels_to_contours
+except ImportError:
+    print("Ultrack not found.")
+    sys.exit(0)
 
 def normalize_lineage_graph(graph, track_id_offset, valid_track_ids):
     normalized = {}
@@ -500,44 +534,48 @@ def lineage_roots(track_ids, graph):
         roots[int(track_id)] = current
     return roots
 
-cwd = os.getcwd() 
-df = pd.DataFrame() 
+cwd = os.getcwd()
+df = pd.DataFrame()
 native_df = pd.DataFrame()
 lineage_graph = {}
-try:     
-    os.chdir(output_dir)     
-    config = MainConfig()     
-    foreground, contours = labels_to_contours(masks)     
-    track(config=config, foreground=foreground, contours=contours)     
-    tracks_data, lineage_graph = to_tracks_layer(config)     
-    if tracks_data is not None and len(tracks_data) > 0:         
-        if isinstance(tracks_data, pd.DataFrame):             
+try:
+    os.chdir(output_dir)
+    config = MainConfig()
+    foreground, contours = labels_to_contours(masks)
+    track(config=config, foreground=foreground, contours=contours)
+    tracks_data, lineage_graph = to_tracks_layer(config)
+    if tracks_data is not None and len(tracks_data) > 0:
+        if isinstance(tracks_data, pd.DataFrame):
             native_df = tracks_data.copy()
-            df = tracks_data.rename(columns={'t': 'frame'})         
-        else:             
-            if tracks_data.shape[1] == 4: native_df = pd.DataFrame(tracks_data, columns=['track_id', 't', 'y', 'x'])             
-            elif tracks_data.shape[1] == 5: native_df = pd.DataFrame(tracks_data, columns=['track_id', 't', 'z', 'y', 'x'])
+            df = tracks_data.rename(columns={'t': 'frame'})
+        else:
+            if tracks_data.shape[1] == 4:
+                native_df = pd.DataFrame(tracks_data, columns=['track_id', 't', 'y', 'x'])
+            elif tracks_data.shape[1] == 5:
+                native_df = pd.DataFrame(tracks_data, columns=['track_id', 't', 'z', 'y', 'x'])
             df = native_df.rename(columns={'t': 'frame'})
-except Exception as e:     
-    print(f"Ultrack Error: {e}") 
-finally:     
-    os.chdir(cwd) 
-if not df.empty:     
+except Exception as e:
+    print(f"Ultrack Error: {e}")
+finally:
+    os.chdir(cwd)
+if not df.empty:
     native_output_dir = os.path.join(output_dir, "tracking_output")
     os.makedirs(native_output_dir, exist_ok=True)
     native_df.to_csv(os.path.join(native_output_dir, "ultrack_native_track.csv"), index=False)
-    rename_map = {'frame': 'frame', 'track_id': 'trackId', 'y': 'Center_of_the_object_1', 'x': 'Center_of_the_object_0'}     
-    clean_df = df.rename(columns=rename_map, errors='ignore')     
+    rename_map = {'frame': 'frame', 'track_id': 'trackId', 'y': 'Center_of_the_object_1', 'x': 'Center_of_the_object_0'}
+    clean_df = df.rename(columns=rename_map, errors='ignore')
     track_id_offset = 0
     if 'trackId' in clean_df.columns and clean_df['trackId'].min() <= 0:
         track_id_offset = int(1 - clean_df['trackId'].min())
         clean_df['trackId'] = clean_df['trackId'].astype(int) + track_id_offset
     all_track_ids = set(clean_df['trackId'].astype(int).tolist())
     normalized_graph = normalize_lineage_graph(lineage_graph, track_id_offset, all_track_ids)
-    # State preservation fallback     
-    if 'state' in clean_df.columns: clean_df['state'] = clean_df['state'].fillna("none")     
-    else: clean_df['state'] = "none"     
-    target_cols = ['frame', 'trackId', 'state', 'continuous_label', 'Center_of_the_object_0', 'Center_of_the_object_1']     
+    # State preservation fallback
+    if 'state' in clean_df.columns:
+        clean_df['state'] = clean_df['state'].fillna("none")
+    else:
+        clean_df['state'] = "none"
+    target_cols = ['frame', 'trackId', 'state', 'continuous_label', 'Center_of_the_object_0', 'Center_of_the_object_1']
     required_cols = ['frame', 'trackId', 'Center_of_the_object_0', 'Center_of_the_object_1']
     missing = [col for col in required_cols if col not in clean_df.columns]
     if missing:
@@ -571,24 +609,30 @@ if not df.empty:
         'Center_of_the_object_0', 'Center_of_the_object_1',
         'lineageId', 'parentTrackId',
     ]
-    clean_df = clean_df[target_cols]     
-    clean_df.to_csv(os.path.join(output_dir, "track.csv"), index=False)     
-    with open(os.path.join(output_dir, 'config.yaml'), 'w') as f:         
-        yaml.dump({'intensity_suffix': 'image', 'mask_suffix': 'mask', 'track_suffix': 'track', 'frame_base': 0, 'stateCol': 'state'}, f)''' 
+    clean_df = clean_df[target_cols]
+    clean_df.to_csv(os.path.join(output_dir, "track.csv"), index=False)
+    with open(os.path.join(output_dir, 'config.yaml'), 'w') as f:
+        yaml.dump({'intensity_suffix': 'image', 'mask_suffix': 'mask', 'track_suffix': 'track', 'frame_base': 0, 'stateCol': 'state'}, f)'''
 # gevent 26.5.0 currently has no Windows cp310 wheel in our test path, so pip
 # falls back to source builds that require Microsoft C++ Build Tools. Use a
 # verified cp310 Windows wheel version and avoid "<" because conda.bat may
 # treat it as shell redirection.
-install_algorithm("ultrack", "tracking", "gevent==23.9.1 ultrack==0.6.3 pandas pyyaml tifffile numpy==1.26.4", c_ult) 
+install_algorithm("ultrack", "tracking", "gevent==23.9.1 ultrack==0.6.3 pandas pyyaml tifffile numpy==1.26.4", c_ult)
 
 _support_root = Path(__file__).resolve().parent / "biotrack_studio"
 CONSENSUS_SUPPORT_FILES = {
+    "_runtime_helpers.py": (_support_root / "_runtime_helpers.py").read_text(encoding="utf-8"),
     "consensus_review_model.py": (_support_root / "consensus_review_model.py").read_text(encoding="utf-8"),
     "consensus_review_panel.py": (_support_root / "consensus_review_panel.py").read_text(encoding="utf-8"),
     "mask_consensus.py": (_support_root / "mask_consensus.py").read_text(encoding="utf-8"),
 }
 
-c_h4tracks = '''import sys, os, tifffile, pandas as pd, numpy as np, napari
+c_h4tracks = '''import sys
+import os
+import tifffile
+import pandas as pd
+import numpy as np
+import napari
 
 def _snap_tracks_to_mask(tracks, mask):
     if mask is None:
@@ -685,9 +729,11 @@ install_correction_plugin(
     c_h4tracks,
     python_version="3.11",
     support_files=CONSENSUS_SUPPORT_FILES,
-) 
+)
 
-c_amdtrk = '''import sys, os, napari
+c_amdtrk = '''import sys
+import os
+import napari
 from napari_amdtrk._reader import reader_function
 from napari_amdtrk._widget import AmdTrkWidget
 
@@ -732,7 +778,7 @@ def main():
 
         viewer.window.add_dock_widget = add_amdtrk_dock
         try:
-            amdtrk_widget = AmdTrkWidget(viewer)
+            _amdtrk_widget = AmdTrkWidget(viewer)
         finally:
             viewer.window.add_dock_widget = original_add_dock_widget
         correction_dock = created_dock.get("dock")

@@ -48,3 +48,9 @@ packages = ["biotrack_studio"]
 
 [tool.setuptools.package-data]
 "biotrack_studio" = ["napari.yaml", "registry.json", "cloud_algos.json"]
+
+[tool.ruff]
+extend-exclude = ["SC-Track"]
+
+[tool.ruff.lint]
+select = ["F", "E4", "E7", "E9"]

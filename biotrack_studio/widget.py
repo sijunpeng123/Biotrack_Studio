@@ -1,4 +1,9 @@
-import json, os, subprocess, napari, numpy as np, tifffile
+import json
+import os
+import subprocess
+import napari
+import numpy as np
+import tifffile
 from pathlib import Path
 from magicgui import magic_factory
 from .engine import SafeRunner
@@ -306,10 +311,10 @@ def _open_correction(viewer: napari.Viewer, out_dir: str, correction_method: str
     from napari.utils.notifications import show_error
     show_error(f"Manual correction tool is not installed: {correction_method}")
 
-@magic_factory(call_button="Run Analysis", 
-               input_path={"label": "Input Data", "mode": "d"}, 
-               output_dir={"label": "Output Folder", "mode": "d"}, 
-               seg_method={"choices": lambda *args: get_algos("segmentation"), "label": "Segmentation"}, 
+@magic_factory(call_button="Run Analysis",
+               input_path={"label": "Input Data", "mode": "d"},
+               output_dir={"label": "Output Folder", "mode": "d"},
+               seg_method={"choices": lambda *args: get_algos("segmentation"), "label": "Segmentation"},
                track_method={"choices": lambda *args: get_algos("tracking"), "label": "Tracking"})
 def make_cell_widget(
     viewer: napari.Viewer,
@@ -333,10 +338,12 @@ def make_cell_widget(
         from napari.utils.notifications import show_error
         show_error(output_error)
         return
-    try: std_img = prepare_standard_tif(str(input_path), out_dir)
+    try:
+        std_img = prepare_standard_tif(str(input_path), out_dir)
     except Exception as e:
         from napari.utils.notifications import show_error
-        show_error(f"Data Error: {e}"); return
+        show_error(f"Data Error: {e}")
+        return
 
     if seg_method == SKIP_SEGMENTATION:
         mask_error = validate_reused_mask(std_img, out_dir)
@@ -352,7 +359,7 @@ def make_cell_widget(
         return
 
     registry = load_registry()
-    
+
     s_info = registry["segmentation"].get(seg_method)
     if s_info and seg_method != SKIP_SEGMENTATION:
         script = resolve_algorithm_script(s_info["script"])
@@ -379,8 +386,10 @@ def make_cell_widget(
             return
         _write_run_metadata(out_dir, seg_method, track_method)
 
-    if os.path.exists(std_img): viewer.add_image(tifffile.imread(std_img), name="Raw")
-    if os.path.exists(os.path.join(out_dir, "mask.tif")): viewer.add_labels(tifffile.imread(os.path.join(out_dir, "mask.tif")), name="Mask")
+    if os.path.exists(std_img):
+        viewer.add_image(tifffile.imread(std_img), name="Raw")
+    if os.path.exists(os.path.join(out_dir, "mask.tif")):
+        viewer.add_labels(tifffile.imread(os.path.join(out_dir, "mask.tif")), name="Mask")
 
 
 def _configure_correction_widget(widget):

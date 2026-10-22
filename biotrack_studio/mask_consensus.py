@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import shutil
 import subprocess
 import time
@@ -15,6 +14,11 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 import tifffile
+
+try:
+    from ._runtime_helpers import _find_conda_executable, _unique_run_dir
+except ImportError:
+    from _runtime_helpers import _find_conda_executable, _unique_run_dir
 
 ProgressCallback = Callable[[str], None]
 CancelCheck = Callable[[], bool]
@@ -95,17 +99,6 @@ def _notify(callback: ProgressCallback | None, message: str) -> None:
     if callback:
         callback(message)
     print(message, flush=True)
-
-
-def _unique_run_dir(root: Path) -> Path:
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    candidate = root / timestamp
-    suffix = 1
-    while candidate.exists():
-        candidate = root / f"{timestamp}_{suffix}"
-        suffix += 1
-    candidate.mkdir(parents=True)
-    return candidate
 
 
 def detect_primary_segmentation(result_dir: str | Path) -> str | None:
@@ -575,30 +568,6 @@ def analyze_mask_stacks(
         "high_priority_sites": high,
         "review_sites": review,
     }
-
-
-def _find_conda_executable() -> Path:
-    candidates = []
-    for name in ("CONDA_EXE", "MAMBA_EXE"):
-        if os.environ.get(name):
-            candidates.append(Path(os.environ[name]))
-    home = Path.home()
-    candidates.extend(
-        [
-            home / "miniconda3" / "Scripts" / "conda.exe",
-            home / "anaconda3" / "Scripts" / "conda.exe",
-            home / "miniforge3" / "Scripts" / "conda.exe",
-            home / "miniconda3" / "bin" / "conda",
-            home / "miniforge3" / "bin" / "conda",
-        ]
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    located = shutil.which("conda") or shutil.which("mamba")
-    if located:
-        return Path(located)
-    raise FileNotFoundError("Conda executable was not found")
 
 
 def _segmentation_registration(reference_model: str) -> dict:

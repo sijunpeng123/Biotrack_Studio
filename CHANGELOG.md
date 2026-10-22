@@ -2,6 +2,20 @@
 
 ## 1.0.0
 
+### 2026-10-22 maintenance cleanup
+
+- Removed unused private display helpers, status arguments, and output buffers.
+- Shared identical consensus runtime helpers and included them in standalone
+  correction support files and launcher synchronization.
+- Limited broad exception handlers and cleaned unused imports and Python style
+  issues in first-party source and generated algorithm launchers.
+- Removed machine-specific standalone demonstrations from the bundled SC-Track
+  source, with the changes documented in `THIRD_PARTY_NOTICES.md`.
+- Added code checks for first-party Python and generated launchers, plus focused
+  tests for runtime helpers and standalone correction support.
+- Retained the v1.0.0 version number, algorithm parameters, result formats,
+  documentation, demonstration data, and production Algorithm Store catalog.
+
 ### 2026-09-05 updates
 
 - Preserved state and optional lineage columns in future inline Algorithm Store

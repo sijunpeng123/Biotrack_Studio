@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # -*- coding: utf-8 -*-
 # @FileName: utils.py
-# @Author: Li Chengxin 
+# @Author: Li Chengxin
 # @Time: 2023/6/30 22:15
 
 from __future__ import annotations
@@ -204,11 +204,3 @@ def mask_to_json(annotation: 'file or folder', xrange=None):
         return mask_seq_to_json(annotation, xrange)
     elif os.path.isfile(annotation):
         return mask_tif_to_json(annotation, xrange)
-
-
-if __name__ == '__main__':
-    # filedir = r'G:\CTC dataset\Fluo-N2DL-HeLa\Fluo-N2DL-HeLa\01_ST\SEG'
-    # jsons = mask_seq_to_json(filedir)
-    # with open(r'G:\CTC dataset\Fluo-N2DL-HeLa\Fluo-N2DL-HeLa\01_ST\test.json', 'w') as f:
-    #     json.dump(jsons, f)
-    mask_tif_to_json(r'G:\paper\evaluate_data\copy_of_1_xy10\mcy.tif')

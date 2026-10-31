@@ -7,10 +7,9 @@ import tifffile
 from pathlib import Path
 from magicgui import magic_factory
 from .engine import SafeRunner
-from .env_manager import get_env_cmd, get_subprocess_env, get_env_target_args
+from .env_manager import get_env_cmd, get_subprocess_env
 from .paths import load_registry, resolve_algorithm_script
 from .utils import prepare_standard_tif
-from ._runtime_helpers import read_tiff
 from .consensus_assist import select_correction_target
 from .boundary_review import BoundaryReviewSettings
 from .mask_consensus import (
@@ -201,7 +200,7 @@ def validate_reused_mask(image_path: str | Path, output_dir: str | Path):
             )
         if mask_dtype.kind not in "iu":
             return "The existing mask.tif must contain integer cell labels."
-        if not np.any(read_tiff(mask_path)):
+        if not np.any(tifffile.memmap(mask_path)):
             return "The existing mask.tif contains no labelled cells."
     except Exception as error:
         return f"The existing mask.tif could not be validated: {error}"
@@ -227,10 +226,6 @@ def validate_correction_selection(correction_method: str):
     return None
 
 def _find_env_python(env_name: str):
-    target = get_env_target_args(env_name)
-    if target[0] == "-p":
-        python_path = Path(target[1]) / ("python.exe" if os.name == "nt" else "bin/python")
-        return str(python_path) if python_path.exists() else None
     try:
         result = subprocess.run(
             [get_env_cmd(), "env", "list", "--json"],
@@ -288,7 +283,7 @@ def _launch_external_correction(out_dir: str, correction_method: str):
     if env_python:
         cmd = [env_python, script, out_dir]
     else:
-        cmd = [get_env_cmd(), "run", "--no-capture-output", *get_env_target_args(env_name), "python", script, out_dir]
+        cmd = [get_env_cmd(), "run", "--no-capture-output", "-n", env_name, "python", script, out_dir]
 
     safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in correction_method)
     log_path = os.path.join(out_dir, f"BioTrack_Studio_correction_{safe_name}.log")

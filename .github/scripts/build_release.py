@@ -13,7 +13,6 @@ IGNORED_NAMES = {
     "__pycache__",
     ".git",
     ".pytest_cache",
-    ".ruff_cache",
     ".ipynb_checkpoints",
     ".coverage",
     "build",
@@ -121,9 +120,9 @@ def build(source: Path, installer_dir: Path, output_dir: Path) -> None:
         copy_clean_tree(github_source / name, full_root / name)
 
     readme = (full_root / "README.md").read_text(encoding="utf-8")
-    maintenance_start = readme.index("## Reproducibility and Testing\n")
-    license_start = readme.index("## License\n", maintenance_start)
-    readme = readme[:maintenance_start] + readme[license_start:]
+    contributing_start = readme.index("## Contributing\n")
+    license_start = readme.index("## License\n", contributing_start)
+    readme = readme[:contributing_start] + readme[license_start:]
     (full_root / "README.md").write_text(readme, encoding="utf-8")
 
     bundled = full_root / "installers"

@@ -6,16 +6,6 @@ import time
 from pathlib import Path
 
 
-def read_tiff(path):
-    """Read TIFFs without requiring write access or uncompressed storage."""
-    import tifffile
-
-    try:
-        return tifffile.memmap(path, mode="r")
-    except ValueError:
-        return tifffile.imread(path)
-
-
 def _find_conda_executable() -> Path:
     candidates = []
     for name in ("CONDA_EXE", "MAMBA_EXE"):

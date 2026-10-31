@@ -14,10 +14,8 @@ import tifffile
 
 try:
     from .boundary_review import BoundaryReviewSettings, find_boundary_events
-    from ._runtime_helpers import read_tiff
 except ImportError:
     from boundary_review import BoundaryReviewSettings, find_boundary_events
-    from _runtime_helpers import read_tiff
 
 
 STANDARD_COLUMNS = [
@@ -204,7 +202,7 @@ def run_consensus(workspace: Path, *, boundary_settings: BoundaryReviewSettings 
     if boundary_settings is not None:
         boundary_settings.validate()
 
-    mask = read_tiff(mask_path)
+    mask = tifffile.memmap(mask_path)
     if mask.ndim != 3:
         raise ValueError(f"Only 2D+t mask stacks are supported, got shape {mask.shape}")
     with tifffile.TiffFile(image_path) as tif:

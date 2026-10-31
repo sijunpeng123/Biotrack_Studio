@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+import tifffile
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -22,7 +23,6 @@ from qtpy.QtWidgets import (
 )
 
 try:
-    from ._runtime_helpers import read_tiff
     from .consensus_review_model import (
         CORRECTED,
         CONNECTION_DIFFERENCE,
@@ -43,7 +43,6 @@ try:
         as_time_stack,
     )
 except ImportError:
-    from _runtime_helpers import read_tiff
     from consensus_review_model import (
         CORRECTED,
         CONNECTION_DIFFERENCE,
@@ -145,7 +144,7 @@ class ConsensusReviewPanel(QWidget):
             self.mask_reference_model = str(
                 payload.get("reference_model") or "reference"
             )
-            self.reference_mask = as_time_stack(read_tiff(reference_path))
+            self.reference_mask = as_time_stack(tifffile.memmap(reference_path))
         except Exception as error:
             print(f"Cannot enable mask recheck: {error}", flush=True)
             self.reference_mask = None

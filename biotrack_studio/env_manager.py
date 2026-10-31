@@ -4,18 +4,6 @@ import shutil
 from pathlib import Path
 
 
-def get_env_target_args(env_name):
-    """Use the selected environment directory consistently for every subprocess."""
-    if not env_name or env_name in {".", ".."} or any(char in env_name for char in "/\\:"):
-        raise ValueError("Environment name must not contain a path")
-    roots = [value for value in os.environ.get("CONDA_ENVS_PATH", "").split(os.pathsep) if value]
-    if roots:
-        prefixes = [Path(root).expanduser().resolve() / env_name for root in roots]
-        target = next((prefix for prefix in prefixes if (prefix / "conda-meta/history").is_file()), prefixes[0])
-        return ["-p", str(target)]
-    return ["-n", env_name]
-
-
 def get_env_cmd():
     env_conda = os.environ.get("CONDA_EXE")
     if env_conda and Path(env_conda).exists():

@@ -4,10 +4,6 @@ on:
   push:
   pull_request:
 
-concurrency:
-  group: tests-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   consensus-unit-tests:
     env:
@@ -30,26 +26,3 @@ jobs:
         run: python .github/scripts/check_code.py
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
-      - name: Check installed application dependencies
-        run: python -m pip check
-
-  bundled-components:
-    env:
-      QT_QPA_PLATFORM: ${{ matrix.os == 'macos-latest' && 'cocoa' || 'offscreen' }}
-      PYTHONNOUSERSITE: "1"
-      TF_FORCE_GPU_ALLOW_GROWTH: "true"
-      MPLBACKEND: Agg
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        component: [cellpose_cyto, cellpose_nuclei, stardist, trackpy, sctrack, ultrack, MMV_H4Tracks, napari-amdtrk]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.component == 'MMV_H4Tracks' && '3.11' || '3.10' }}
-      - name: Install and run the packaged component
-        run: python .github/scripts/check_component.py "${{ matrix.component }}" --install

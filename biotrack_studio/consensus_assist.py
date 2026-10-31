@@ -22,7 +22,7 @@ from .consensus_core import (
     run_consensus,
 )
 from .boundary_review import BoundaryReviewSettings
-from ._runtime_helpers import _find_conda_executable, _unique_run_dir, read_tiff
+from ._runtime_helpers import _find_conda_executable, _unique_run_dir
 
 
 ProgressCallback = Callable[[str], None]
@@ -81,7 +81,7 @@ def validate_pipeline_result(result_dir: str | Path) -> dict:
     if mask_shape[0] < 2:
         raise ValueError("Consensus assistance requires at least two frames")
 
-    mask = read_tiff(mask_path)
+    mask = tifffile.memmap(mask_path)
     if not np.issubdtype(mask.dtype, np.integer):
         raise ValueError(f"mask.tif must use integer labels, got {mask.dtype}")
     if np.issubdtype(mask.dtype, np.signedinteger) and int(np.min(mask)) < 0:
@@ -163,9 +163,9 @@ def run_trackpy_reference(
     cancel_check: CancelCheck | None = None,
 ) -> Path:
     try:
-        from .env_manager import get_subprocess_env, get_env_target_args
+        from .env_manager import get_subprocess_env
     except ImportError:
-        from biotrack_studio.env_manager import get_subprocess_env, get_env_target_args
+        from biotrack_studio.env_manager import get_subprocess_env
 
     info = _trackpy_registration()
     link_or_copy(image_path, run_dir / "image.tif")
@@ -175,7 +175,8 @@ def run_trackpy_reference(
         str(_find_conda_executable()),
         "run",
         "--no-capture-output",
-        *get_env_target_args(info["env"]),
+        "-n",
+        info["env"],
         "python",
         info["script"],
         str(run_dir),
@@ -302,7 +303,7 @@ def build_assisted_correction(
         )
     shutil.copy2(reference_source, reference_dir / "track.csv")
 
-    mask = read_tiff(validated["mask_path"])
+    mask = tifffile.memmap(validated["mask_path"])
     valid_nodes = set(object_stats(mask))
     primary_rows = validate_track_file(primary_dir / "track.csv", mask, valid_nodes)
     reference_rows = validate_track_file(reference_dir / "track.csv", mask, valid_nodes)

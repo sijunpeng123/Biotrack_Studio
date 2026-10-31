@@ -8,7 +8,7 @@ from pathlib import Path
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QProgressDialog
 from napari.utils.notifications import show_error, show_info
-from .env_manager import get_env_cmd, get_subprocess_env, get_env_target_args
+from .env_manager import get_env_cmd, get_subprocess_env
 
 os.environ.setdefault("PYTHONNOUSERSITE", "1")
 
@@ -16,7 +16,7 @@ class SafeRunner:
     @staticmethod
     def run_step(env_name, script_path, args, step_name):
         env_cmd = get_env_cmd()
-        cmd = [env_cmd, "run", "--no-capture-output", *get_env_target_args(env_name), "python", script_path] + args
+        cmd = [env_cmd, "run", "--no-capture-output", "-n", env_name, "python", script_path] + args
         output_dir = SafeRunner._infer_output_dir(args)
         log_path = SafeRunner._make_log_path(output_dir, step_name)
 

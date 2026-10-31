@@ -13,6 +13,7 @@ IGNORED_NAMES = {
     "__pycache__",
     ".git",
     ".pytest_cache",
+    ".ruff_cache",
     ".ipynb_checkpoints",
     ".coverage",
     "build",

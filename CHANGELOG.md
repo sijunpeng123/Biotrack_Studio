@@ -2,6 +2,19 @@
 
 ## 1.0.0
 
+### 2026-10-31 installation and manuscript alignment
+
+- Included the optional interior track-end and track-start review checks,
+  with separate prompt types and saved review reports.
+- Fixed MMV TIFF/CSV workspace initialization and pinned compatible correction
+  dependencies. Existing installations are checked and repaired when needed.
+- Honored selected conda environment directories throughout installation,
+  execution, and correction launch.
+- Supported compressed and read-only TIFFs during review, and validated
+  single-channel frame folders and single multi-page TIFF input.
+- Added fresh component installation and functional checks on all three
+  supported operating systems. Tracker parameters and benchmark data are unchanged.
+
 ### 2026-10-22 maintenance cleanup
 
 - Removed unused private display helpers, status arguments, and output buffers.

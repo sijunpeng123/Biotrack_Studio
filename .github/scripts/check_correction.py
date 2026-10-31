@@ -53,6 +53,8 @@ def run(tool, output):
         if tool == "mmv":
             from mmv_h4tracks._writer import save_zarr
             from mmv_h4tracks._reader import zarr_reader, load_zarr_data
+            from qtpy.QtCore import QTimer
+            from qtpy.QtWidgets import QApplication, QMessageBox
 
             raw = viewer.add_image(image, name="Raw")
             labels = viewer.add_labels(mask.copy(), name="Mask")
@@ -64,6 +66,8 @@ def run(tool, output):
             tracks = viewer.layers["Tracks"]
             assert len(tracks.data) == 5
             saved = str(output / "corrected.zarr")
+            QTimer.singleShot(0, lambda: [window.accept() for window in QApplication.topLevelWidgets()
+                                         if isinstance(window, QMessageBox)])
             save_zarr(saved, [raw, labels, tracks])
             group, _ = zarr_reader(saved)
             raw_levels, saved_mask, saved_tracks, _ = load_zarr_data(group)

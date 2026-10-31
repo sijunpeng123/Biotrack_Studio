@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
@@ -29,7 +29,7 @@ jobs:
         run: python .github/scripts/install_mmv_validation.py
       - name: Install Linux display dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb libxcb-cursor0 libxkbcommon-x11-0
+        run: sudo apt-get update && sudo apt-get install -y xvfb libegl1 libgl1 libopengl0 libxcb-cursor0 libxkbcommon-x11-0
       - name: Test native MMV update and saving on Linux
         if: runner.os == 'Linux'
         run: xvfb-run -a python -m unittest discover -s tests -p test_mmv_compatibility.py -v

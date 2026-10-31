@@ -191,7 +191,7 @@ else:
         labels, _ = model.predict_instances(img_norm)
         masks[t] = labels
 tifffile.imwrite(os.path.join(output_dir, "mask.tif"), masks.astype(np.uint16), imagej=True)'''
-install_algorithm("stardist", "segmentation", "stardist==0.9.1 csbdeep==0.8.2 numpy==1.26.4 setuptools==80.9.0 tifffile", c_star)
+install_algorithm("stardist", "segmentation", "stardist==0.9.1 csbdeep==0.8.2 numpy==1.26.4 ml-dtypes<0.6 setuptools==80.9.0 tifffile", c_star)
 
 c_sc = '''import sys
 import os
@@ -725,7 +725,7 @@ if __name__ == "__main__":
     main()'''
 install_correction_plugin(
     "MMV_H4Tracks",
-    "napari[all] mmv_h4tracks==1.3.0 pandas tifffile imagecodecs",
+    "napari[all]==0.5.6 mmv_h4tracks==1.3.0 numpy==1.26.4 pandas==2.2.3 scipy==1.15.3 zarr==3.0.8 tifffile imagecodecs pyyaml",
     c_h4tracks,
     python_version="3.11",
     support_files=CONSENSUS_SUPPORT_FILES,

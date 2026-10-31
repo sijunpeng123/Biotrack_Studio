@@ -29,7 +29,11 @@ def _fallback_user_data_dir():
     return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")) / APP_NAME
 
 
-USER_DATA_DIR = Path(user_data_dir(APP_NAME, appauthor=False)) if user_data_dir else _fallback_user_data_dir()
+USER_DATA_DIR = (
+    Path(os.environ["BIOTRACK_USER_DATA_DIR"]).expanduser().resolve()
+    if os.environ.get("BIOTRACK_USER_DATA_DIR")
+    else Path(user_data_dir(APP_NAME, appauthor=False)) if user_data_dir else _fallback_user_data_dir()
+)
 USER_ALGO_DIR = USER_DATA_DIR / "algorithms"
 USER_REGISTRY_PATH = USER_DATA_DIR / "registry.json"
 

@@ -24,6 +24,8 @@ CLASSIFICATIONS = (UNREVIEWED, NO_ISSUE, PROBLEM, CORRECTED)
 RESOLVED_CLASSIFICATIONS = {NO_ISSUE, CORRECTED}
 CONNECTION_DIFFERENCE = "connection_difference"
 PRIMARY_UNTRACKED = "primary_untracked_object"
+INTERIOR_END = "interior_track_end"
+INTERIOR_START = "interior_track_start"
 
 
 @dataclass(frozen=True)
@@ -228,6 +230,8 @@ class ReviewStatusStore:
             "primary_untracked_objects": int(
                 ((event_types == "tracking") & (reasons == PRIMARY_UNTRACKED)).sum()
             ),
+            "interior_track_ends": int(((event_types == "tracking") & (reasons == INTERIOR_END)).sum()),
+            "interior_track_starts": int(((event_types == "tracking") & (reasons == INTERIOR_START)).sum()),
             "high_priority_mask_sites": int(
                 ((event_types == "mask") & (severities == "high")).sum()
             ),
@@ -256,6 +260,10 @@ class ReviewStatusStore:
                 "tracking": " vs ".join(tracker_names) or "tracking tools",
                 "mask": " vs ".join(mask_models) or "segmentation masks",
             }
+        )
+        endpoint_rows = tracking_reasons(report).isin([INTERIOR_END, INTERIOR_START])
+        report.loc[endpoint_rows, "comparison"] = (
+            (tracker_names[0] if tracker_names else "Primary tracker") + " endpoint check"
         )
         leading = [
             "event_id",

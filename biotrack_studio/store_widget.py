@@ -16,7 +16,7 @@ import requests
 from magicgui import magic_factory
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QProgressDialog
-from .env_manager import get_env_cmd, get_subprocess_env
+from .env_manager import get_env_cmd, get_subprocess_env, get_env_target_args
 from .paths import PACKAGE_DIR, USER_ALGO_DIR, USER_DATA_DIR, ensure_user_dirs, load_registry, save_registry
 
 os.environ.setdefault("PYTHONNOUSERSITE", "1")
@@ -548,7 +548,7 @@ def install_from_cloud(algo_id):
 
     if not _env_exists(env_cmd, env_name):
         _run_install_command(
-            [env_cmd, "create", "-n", env_name, f"python={python_version}", "git", "-y"],
+            [env_cmd, "create", *get_env_target_args(env_name), f"python={python_version}", "git", "-y"],
             f"Creating environment for {algo_id}",
             log_path,
         )
@@ -561,7 +561,7 @@ def install_from_cloud(algo_id):
             req_path = req.name
         try:
             _run_install_command(
-                [env_cmd, "run", "-n", env_name, "python", "-m", "pip", "install", "-r", req_path],
+                [env_cmd, "run", *get_env_target_args(env_name), "python", "-m", "pip", "install", "-r", req_path],
                 f"Installing dependencies for {algo_id}",
                 log_path,
             )
@@ -617,8 +617,7 @@ def _install_framework_if_needed(env_cmd, env_name, algo_id, dependencies, log_p
             [
                 env_cmd,
                 "run",
-                "-n",
-                env_name,
+                *get_env_target_args(env_name),
                 "python",
                 "-m",
                 "pip",
@@ -633,8 +632,7 @@ def _install_framework_if_needed(env_cmd, env_name, algo_id, dependencies, log_p
             [
                 env_cmd,
                 "run",
-                "-n",
-                env_name,
+                *get_env_target_args(env_name),
                 "python",
                 "-m",
                 "pip",
@@ -649,8 +647,7 @@ def _install_framework_if_needed(env_cmd, env_name, algo_id, dependencies, log_p
             [
                 env_cmd,
                 "run",
-                "-n",
-                env_name,
+                *get_env_target_args(env_name),
                 "python",
                 "-m",
                 "pip",
@@ -669,8 +666,7 @@ def _install_framework_if_needed(env_cmd, env_name, algo_id, dependencies, log_p
             [
                 env_cmd,
                 "run",
-                "-n",
-                env_name,
+                *get_env_target_args(env_name),
                 "python",
                 "-m",
                 "pip",
@@ -688,8 +684,7 @@ def _install_framework_if_needed(env_cmd, env_name, algo_id, dependencies, log_p
             [
                 env_cmd,
                 "run",
-                "-n",
-                env_name,
+                *get_env_target_args(env_name),
                 "python",
                 "-m",
                 "pip",
@@ -729,7 +724,7 @@ def _verify_cloud_imports(env_cmd, env_name, info, log_path):
         return
     code = "import " + ", ".join(modules)
     _run_install_command(
-        [env_cmd, "run", "-n", env_name, "python", "-c", code],
+        [env_cmd, "run", *get_env_target_args(env_name), "python", "-c", code],
         f"Verifying imports for {info.get('id', env_name)}",
         log_path,
     )

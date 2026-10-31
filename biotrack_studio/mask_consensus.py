@@ -16,9 +16,9 @@ import pandas as pd
 import tifffile
 
 try:
-    from ._runtime_helpers import _find_conda_executable, _unique_run_dir
+    from ._runtime_helpers import _find_conda_executable, _unique_run_dir, read_tiff
 except ImportError:
-    from _runtime_helpers import _find_conda_executable, _unique_run_dir
+    from _runtime_helpers import _find_conda_executable, _unique_run_dir, read_tiff
 
 ProgressCallback = Callable[[str], None]
 CancelCheck = Callable[[], bool]
@@ -593,7 +593,7 @@ def run_segmentation_reference(
     callback: ProgressCallback | None = None,
     cancel_check: CancelCheck | None = None,
 ) -> Path:
-    from .env_manager import get_subprocess_env
+    from .env_manager import get_subprocess_env, get_env_target_args
 
     info = _segmentation_registration(reference_model)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -602,8 +602,7 @@ def run_segmentation_reference(
         str(_find_conda_executable()),
         "run",
         "--no-capture-output",
-        "-n",
-        info["env"],
+        *get_env_target_args(info["env"]),
         "python",
         info["script"],
         str(image_path),
@@ -700,7 +699,7 @@ def build_mask_assisted_correction(
         else result_dir / "consensus_assist"
     )
     run_dir = _unique_run_dir(root / "mask_runs")
-    primary_masks = as_time_stack(tifffile.memmap(validated["mask_path"]))
+    primary_masks = as_time_stack(read_tiff(validated["mask_path"]))
     indices = _sample_indices(int(primary_masks.shape[0]))
 
     if reference_mask:
@@ -710,7 +709,7 @@ def build_mask_assisted_correction(
                 f"Reference mask does not exist: {reference_path}"
             )
     else:
-        image = as_time_stack(tifffile.memmap(validated["image_path"]))
+        image = as_time_stack(read_tiff(validated["image_path"]))
         precheck_input = run_dir / "precheck_image.tif"
         tifffile.imwrite(precheck_input, np.asarray(image[indices]))
         precheck_dir = run_dir / "precheck_reference"
@@ -721,7 +720,7 @@ def build_mask_assisted_correction(
             callback,
             cancel_check,
         )
-        precheck_masks = as_time_stack(tifffile.memmap(precheck_path))
+        precheck_masks = as_time_stack(read_tiff(precheck_path))
         report = compatibility_report(
             np.asarray(primary_masks[indices]),
             precheck_masks,
@@ -748,7 +747,7 @@ def build_mask_assisted_correction(
                 cancel_check,
             )
 
-    reference_masks = as_time_stack(tifffile.memmap(reference_path))
+    reference_masks = as_time_stack(read_tiff(reference_path))
     if tuple(reference_masks.shape) != tuple(primary_masks.shape):
         raise ValueError(
             f"Reference mask shape {reference_masks.shape} does not match "

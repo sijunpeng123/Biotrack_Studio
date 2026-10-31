@@ -12,6 +12,13 @@ import numpy as np
 import pandas as pd
 import tifffile
 
+try:
+    from .boundary_review import BoundaryReviewSettings, find_boundary_events
+    from ._runtime_helpers import read_tiff
+except ImportError:
+    from boundary_review import BoundaryReviewSettings, find_boundary_events
+    from _runtime_helpers import read_tiff
+
 
 STANDARD_COLUMNS = [
     "frame",
@@ -163,7 +170,7 @@ def link_or_copy(source: Path, destination: Path) -> None:
     shutil.copy2(source, destination)
 
 
-def run_consensus(workspace: Path) -> dict:
+def run_consensus(workspace: Path, *, boundary_settings: BoundaryReviewSettings | None = None) -> dict:
     workspace = Path(workspace).resolve()
     input_dir = workspace / "input"
     image_path = input_dir / "image.tif"
@@ -172,6 +179,7 @@ def run_consensus(workspace: Path) -> dict:
         if not path.is_file():
             raise FileNotFoundError(f"Missing required input: {path}")
 
+    manifest = {}
     manifest_path = workspace / "workspace.json"
     if manifest_path.is_file():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -191,8 +199,12 @@ def run_consensus(workspace: Path) -> dict:
     missing_tracks = [str(path) for path in track_paths if not path.is_file()]
     if missing_tracks:
         raise FileNotFoundError("Missing tracking input(s): " + ", ".join(missing_tracks))
+    if boundary_settings is None and manifest.get("boundary_review") is not None:
+        boundary_settings = BoundaryReviewSettings(**manifest["boundary_review"])
+    if boundary_settings is not None:
+        boundary_settings.validate()
 
-    mask = tifffile.memmap(mask_path)
+    mask = read_tiff(mask_path)
     if mask.ndim != 3:
         raise ValueError(f"Only 2D+t mask stacks are supported, got shape {mask.shape}")
     with tifffile.TiffFile(image_path) as tif:
@@ -248,6 +260,30 @@ def run_consensus(workspace: Path) -> dict:
                 }
             )
 
+    # Append review prompts without changing consensus links or existing IDs.
+    disagreement_count = len(event_rows)
+    boundary_summary = None
+    if boundary_settings is not None:
+        candidates, boundary_summary = find_boundary_events(
+            mask, normalized[tracker_names[0]], boundary_settings
+        )
+        queued = {(row["frame"], row["mask_label"]) for row in event_rows}
+        added = 0
+        for candidate in candidates:
+            node = (candidate["frame"], candidate["mask_label"])
+            if node in queued:
+                continue
+            area, y, x = stats[node]
+            added += 1
+            category = "END" if candidate["reason"] == "interior_track_end" else "START"
+            event_rows.append({"event_id": f"B_{category}_{node[0]:05d}_{node[1]}", **candidate,
+                               "object_area": area, "object_y": round(y, 3), "object_x": round(x, 3),
+                               **{f"{name}_successor": signature(node, *tracker_graphs[name])
+                                  for name in tracker_names}})
+            queued.add(node)
+        boundary_summary["already_queued"] = len(candidates) - added
+        boundary_summary["added_sites"] = added
+
     target_counts = Counter(accepted_edges.values())
     conflicting_targets = {target for target, count in target_counts.items() if count > 1}
     if conflicting_targets:
@@ -287,6 +323,8 @@ def run_consensus(workspace: Path) -> dict:
         "most_common_votes",
         *[f"{name}_successor" for name in tracker_names],
     ]
+    if boundary_settings is not None:
+        event_columns += ["primary_track_id", "edge_distance_px", "edge_margin_px"]
     pd.DataFrame(event_rows, columns=event_columns).to_csv(
         output_dir / "consensus_events.csv", index=False
     )
@@ -306,13 +344,17 @@ def run_consensus(workspace: Path) -> dict:
         "segmented_objects": len(nodes),
         "evaluated_source_objects": len(source_nodes),
         "retained_consensus_links": len(accepted_edges),
-        "disagreement_sites": len(event_rows),
+        "disagreement_sites": disagreement_count,
         "connection_difference_sites": reason_counts["connection_difference"],
         "primary_untracked_sites": reason_counts["primary_untracked_object"],
         "consensus_track_fragments": len(set(track_ids.values())),
         "rule": "A link is retained only when every imported tracker selects the same successor.",
         "state_value": "none",
     }
+    if boundary_summary is not None:
+        summary.update(review_sites=len(event_rows), boundary_review=boundary_summary,
+                       interior_track_end_sites=reason_counts["interior_track_end"],
+                       interior_track_start_sites=reason_counts["interior_track_start"])
     (output_dir / "consensus_summary.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"
     )

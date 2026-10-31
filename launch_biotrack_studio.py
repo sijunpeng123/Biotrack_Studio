@@ -6,8 +6,9 @@ import subprocess
 import sys
 import tempfile
 from datetime import datetime
+import ast
 
-from biotrack_studio.env_manager import get_subprocess_env
+from biotrack_studio.env_manager import get_subprocess_env, get_env_target_args
 from biotrack_studio.paths import USER_ALGO_DIR, ensure_user_dirs
 
 
@@ -128,7 +129,7 @@ def child_process_env(conda=None):
 def run_stream(command, conda, use_env=False):
     full_command = [conda]
     if use_env:
-        full_command += ["run", "--no-capture-output", "-n", ENV_NAME]
+        full_command += ["run", "--no-capture-output", *get_env_target_args(ENV_NAME)]
     full_command += [str(item) for item in command]
 
     log("Running:")
@@ -181,21 +182,34 @@ def run_capture(command):
 def env_exists(conda):
     output = run_capture([conda, "env", "list", "--json"])
     envs = json.loads(output).get("envs", [])
+    target = get_env_target_args(ENV_NAME)
+    if target[0] == "-p":
+        return any(Path(env_path).resolve() == Path(target[1]).resolve() for env_path in envs)
     return any(Path(env_path).name == ENV_NAME for env_path in envs)
 
 
-def env_imports_ready(conda, env_name, modules):
-    code = (
-        "import importlib.util, sys; "
-        f"modules = {modules!r}; "
-        "missing = [name for name in modules if importlib.util.find_spec(name) is None]; "
-        "sys.exit(1 if missing else 0)"
-    )
-    try:
-        run_capture([conda, "run", "-n", env_name, "python", "-c", code])
-    except LauncherError:
-        return False
-    return True
+def env_imports_ready(conda, env_name, modules, dependencies=""):
+    from installer import _imports_ready
+
+    return _imports_ready(conda, env_name, modules, dependencies)
+
+
+def bundled_requirements():
+    requirements = {}
+    tree = ast.parse((PROJECT_ROOT / "init_base_algos.py").read_text(encoding="utf-8"))
+    for node in tree.body:
+        if not isinstance(node, ast.Expr) or not isinstance(node.value, ast.Call):
+            continue
+        call = node.value
+        if not isinstance(call.func, ast.Name):
+            continue
+        if call.func.id == "install_algorithm":
+            name, category, dependencies = [ast.literal_eval(arg) for arg in call.args[:3]]
+            requirements[f"env_{category}_{name}"] = dependencies
+        elif call.func.id == "install_correction_plugin":
+            name, dependencies = [ast.literal_eval(arg) for arg in call.args[:2]]
+            requirements[f"env_correction_{name.lower().replace('-', '_')}"] = dependencies
+    return requirements
 
 
 def algorithms_ready(conda):
@@ -270,7 +284,7 @@ print("READY")
         ) as f:
             f.write(check_script)
             temp_path = Path(f.name)
-        output = run_capture([conda, "run", "-n", ENV_NAME, "python", str(temp_path)])
+        output = run_capture([conda, "run", *get_env_target_args(ENV_NAME), "python", str(temp_path)])
     finally:
         if temp_path and temp_path.exists():
             try:
@@ -288,9 +302,12 @@ print("READY")
         "env_tracking_trackpy": ["trackpy", "skimage", "pandas", "yaml", "tifffile"],
         "env_tracking_sctrack": ["SCTrack", "cv2", "pandas", "yaml", "tifffile"],
         "env_tracking_ultrack": ["ultrack", "pandas", "yaml", "tifffile"],
+        "env_correction_mmv_h4tracks": ["napari", "mmv_h4tracks", "pandas", "tifffile"],
+        "env_correction_napari_amdtrk": ["napari", "napari_amdtrk", "pandas", "tifffile"],
     }
+    requirements = bundled_requirements()
     for env_name, modules in expected_imports.items():
-        if not env_imports_ready(conda, env_name, modules):
+        if not env_imports_ready(conda, env_name, modules, requirements[env_name]):
             log(f"Bundled algorithm environment is incomplete: {env_name}")
             return False
 
@@ -356,7 +373,7 @@ def main():
         if env_exists(conda):
             log(f"Conda environment '{ENV_NAME}' already exists. Skipping environment creation.")
         else:
-            run_stream(["env", "create", "-f", "environment.yml"], conda)
+            run_stream(["env", "create", "-f", "environment.yml", *get_env_target_args(ENV_NAME)], conda)
 
     def install_plugin():
         run_stream(["python", "-m", "pip", "install", "-e", "."], conda_holder["conda"], use_env=True)
@@ -370,14 +387,9 @@ def main():
             log("Initializing bundled algorithms. This can take a long time on first setup.")
             run_stream(["python", "init_base_algos.py"], conda, use_env=True)
             if not algorithms_ready(conda):
-                log(
-                    "WARNING: Bundled algorithm initialization finished, but some algorithm scripts or "
-                    "dependencies are still incomplete. BioTrack Studio will open with the algorithms "
-                    "that installed successfully. Check BioTrack_Studio_install_log.txt for details."
-                )
-                log(
-                    "Bundled algorithm initialization finished, but required algorithm scripts or dependencies "
-                    "are still incomplete."
+                raise LauncherError(
+                    "Some bundled environments are incomplete. Check the failed method in this log "
+                    "and run the launcher again to retry."
                 )
 
     def open_napari():

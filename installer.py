@@ -2,10 +2,13 @@ import os
 import subprocess
 import shutil
 import platform
+import re
+import json
+from pathlib import Path
 
 os.environ.setdefault("PYTHONNOUSERSITE", "1")
 
-from biotrack_studio.env_manager import get_env_cmd, get_subprocess_env
+from biotrack_studio.env_manager import get_env_cmd, get_subprocess_env, get_env_target_args
 from biotrack_studio.paths import PROJECT_ROOT, USER_ALGO_DIR, ensure_user_dirs, load_registry, save_registry
 
 def get_conda_cmd():
@@ -15,7 +18,7 @@ def env_exists(env_name):
     conda_cmd = get_conda_cmd()
     try:
         result = subprocess.run(
-            [conda_cmd, "env", "list"],
+            [conda_cmd, "env", "list", "--json"],
             check=False,
             capture_output=True,
             text=True,
@@ -24,11 +27,14 @@ def env_exists(env_name):
     except Exception:
         return False
 
-    for line in result.stdout.splitlines():
-        parts = line.split()
-        if parts and parts[0] == env_name:
-            return True
-    return False
+    if result.returncode:
+        return False
+    try:
+        prefixes = [Path(value).resolve() for value in json.loads(result.stdout).get("envs", [])]
+    except (ValueError, TypeError):
+        return False
+    target = get_env_target_args(env_name)
+    return Path(target[1]).resolve() in prefixes if target[0] == "-p" else any(path.name == env_name for path in prefixes)
 
 def get_hardware():
     if platform.system() == "Darwin" and platform.machine() == "arm64":
@@ -54,20 +60,35 @@ def _expected_modules(category, name):
         return ["ultrack", "pandas", "yaml", "tifffile", "numpy"]
     return []
 
-def _verify_imports(conda_cmd, env_name, modules):
+def pinned_requirements(dependencies):
+    return dict(re.findall(r"([A-Za-z0-9_.-]+)(?:\[[^]]+\])?==([^\s]+)", dependencies))
+
+
+def _import_check_code(modules, dependencies=""):
+    return (
+        "import importlib, importlib.metadata; "
+        f"[importlib.import_module(name) for name in {modules!r}]; "
+        f"pins = {pinned_requirements(dependencies)!r}; "
+        "mismatches = {name: (importlib.metadata.version(name), expected) "
+        "for name, expected in pins.items() if importlib.metadata.version(name) != expected}; "
+        "assert not mismatches, mismatches"
+    )
+
+
+def _verify_imports(conda_cmd, env_name, modules, dependencies=""):
     if not modules:
         return
-    code = "import " + ", ".join(modules)
+    code = _import_check_code(modules, dependencies)
     print(f"[Build] Verifying imports in {env_name}: {', '.join(modules)}")
-    subprocess.run([conda_cmd, "run", "-n", env_name, "python", "-c", code], check=True, env=get_subprocess_env())
+    subprocess.run([conda_cmd, "run", *get_env_target_args(env_name), "python", "-c", code], check=True, env=get_subprocess_env())
 
-def _imports_ready(conda_cmd, env_name, modules):
+def _imports_ready(conda_cmd, env_name, modules, dependencies=""):
     if not modules:
         return True
-    code = "import " + ", ".join(modules)
+    code = _import_check_code(modules, dependencies)
     try:
         subprocess.run(
-            [conda_cmd, "run", "-n", env_name, "python", "-c", code],
+            [conda_cmd, "run", *get_env_target_args(env_name), "python", "-c", code],
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -82,8 +103,7 @@ def _pip_install(conda_cmd, env_name, packages):
         [
             conda_cmd,
             "run",
-            "-n",
-            env_name,
+            *get_env_target_args(env_name),
             "python",
             "-m",
             "pip",
@@ -114,7 +134,7 @@ def install_algorithm(algo_name, category, dependencies, script_content):
     expected_modules = _expected_modules(category, algo_name)
     environment_exists = env_exists(env_name)
     dependencies_ready = environment_exists and _imports_ready(
-        conda_cmd, env_name, expected_modules
+        conda_cmd, env_name, expected_modules, dependencies
     )
 
     # Phase 1: Conda environment creation with fallback
@@ -123,11 +143,11 @@ def install_algorithm(algo_name, category, dependencies, script_content):
     else:
         try:
             print("[Build] Attempting global conda environment creation...")
-            subprocess.run([conda_cmd, "create", "-n", env_name, "python=3.10", "git", "-y"], check=True, env=get_subprocess_env())
+            subprocess.run([conda_cmd, "create", *get_env_target_args(env_name), "python=3.10", "git", "-y"], check=True, env=get_subprocess_env())
         except subprocess.CalledProcessError:
             print("[Build] Global conda failed. Switching to mirror proxy...")
             tsinghua_conda = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/"
-            subprocess.run([conda_cmd, "create", "-n", env_name, "python=3.10", "git", "-c", tsinghua_conda, "-y"], check=True, env=get_subprocess_env())
+            subprocess.run([conda_cmd, "create", *get_env_target_args(env_name), "python=3.10", "git", "-c", tsinghua_conda, "-y"], check=True, env=get_subprocess_env())
 
     deps_list = []
     for dep in dependencies.split():
@@ -145,7 +165,7 @@ def install_algorithm(algo_name, category, dependencies, script_content):
             _pip_install(conda_cmd, env_name, ["tensorflow"])
         elif hw_type == "cuda":
             print("[Build] Injecting framework for GPU...")
-            if "cellpose" in algo_name or "cellsam" in algo_name:
+            if "cellpose" in algo_name or "cellsam" in algo_name or algo_name == "ultrack":
                 _pip_install(conda_cmd, env_name, ["torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cu118"])
             elif "stardist" in algo_name:
                 _pip_install(conda_cmd, env_name, ["tensorflow[and-cuda]"])
@@ -180,7 +200,7 @@ def install_algorithm(algo_name, category, dependencies, script_content):
                 tsinghua_pip = "https://pypi.tuna.tsinghua.edu.cn/simple"
                 _pip_install(conda_cmd, env_name, ["-i", tsinghua_pip] + mirror_deps)
 
-        _verify_imports(conda_cmd, env_name, expected_modules)
+        _verify_imports(conda_cmd, env_name, expected_modules, dependencies)
 
     ensure_user_dirs()
     script_path = USER_ALGO_DIR / script_name
@@ -212,7 +232,7 @@ def install_correction_plugin(
     expected_modules = _expected_correction_modules(plugin_name)
     environment_exists = env_exists(env_name)
     dependencies_ready = environment_exists and _imports_ready(
-        conda_cmd, env_name, expected_modules
+        conda_cmd, env_name, expected_modules, dependencies
     )
 
     if environment_exists:
@@ -220,16 +240,18 @@ def install_correction_plugin(
     else:
         try:
             print("[Build] Attempting global conda environment creation...")
-            subprocess.run([conda_cmd, "create", "-n", env_name, f"python={python_version}", "-y"], check=True, env=get_subprocess_env())
+            subprocess.run([conda_cmd, "create", *get_env_target_args(env_name), f"python={python_version}", "-y"], check=True, env=get_subprocess_env())
         except subprocess.CalledProcessError:
             print("[Build] Global conda failed. Switching to mirror proxy...")
             tsinghua_conda = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/"
-            subprocess.run([conda_cmd, "create", "-n", env_name, f"python={python_version}", "-c", tsinghua_conda, "-y"], check=True, env=get_subprocess_env())
+            subprocess.run([conda_cmd, "create", *get_env_target_args(env_name), f"python={python_version}", "-c", tsinghua_conda, "-y"], check=True, env=get_subprocess_env())
 
     if dependencies_ready:
         print(f"[Build] Dependencies in {env_name} are already available. Skipping pip installation.")
     else:
         deps_list = dependencies.split()
+        if plugin_name == "MMV_H4Tracks" and get_hardware() == "cuda":
+            _pip_install(conda_cmd, env_name, ["torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cu118"])
         if deps_list:
             try:
                 print("[Build] Attempting global pip installation...")
@@ -239,7 +261,7 @@ def install_correction_plugin(
                 tsinghua_pip = "https://pypi.tuna.tsinghua.edu.cn/simple"
                 _pip_install(conda_cmd, env_name, ["-i", tsinghua_pip] + deps_list)
 
-        _verify_imports(conda_cmd, env_name, expected_modules)
+        _verify_imports(conda_cmd, env_name, expected_modules, dependencies)
 
     ensure_user_dirs()
     script_path = USER_ALGO_DIR / script_name

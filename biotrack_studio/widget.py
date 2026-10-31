@@ -7,10 +7,12 @@ import tifffile
 from pathlib import Path
 from magicgui import magic_factory
 from .engine import SafeRunner
-from .env_manager import get_env_cmd, get_subprocess_env
+from .env_manager import get_env_cmd, get_subprocess_env, get_env_target_args
 from .paths import load_registry, resolve_algorithm_script
 from .utils import prepare_standard_tif
+from ._runtime_helpers import read_tiff
 from .consensus_assist import select_correction_target
+from .boundary_review import BoundaryReviewSettings
 from .mask_consensus import (
     AUTOMATIC_REFERENCE,
     MaskConsensusSettings,
@@ -199,7 +201,7 @@ def validate_reused_mask(image_path: str | Path, output_dir: str | Path):
             )
         if mask_dtype.kind not in "iu":
             return "The existing mask.tif must contain integer cell labels."
-        if not np.any(tifffile.memmap(mask_path)):
+        if not np.any(read_tiff(mask_path)):
             return "The existing mask.tif contains no labelled cells."
     except Exception as error:
         return f"The existing mask.tif could not be validated: {error}"
@@ -225,6 +227,10 @@ def validate_correction_selection(correction_method: str):
     return None
 
 def _find_env_python(env_name: str):
+    target = get_env_target_args(env_name)
+    if target[0] == "-p":
+        python_path = Path(target[1]) / ("python.exe" if os.name == "nt" else "bin/python")
+        return str(python_path) if python_path.exists() else None
     try:
         result = subprocess.run(
             [get_env_cmd(), "env", "list", "--json"],
@@ -282,7 +288,7 @@ def _launch_external_correction(out_dir: str, correction_method: str):
     if env_python:
         cmd = [env_python, script, out_dir]
     else:
-        cmd = [get_env_cmd(), "run", "--no-capture-output", "-n", env_name, "python", script, out_dir]
+        cmd = [get_env_cmd(), "run", "--no-capture-output", *get_env_target_args(env_name), "python", script, out_dir]
 
     safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in correction_method)
     log_path = os.path.join(out_dir, f"BioTrack_Studio_correction_{safe_name}.log")
@@ -311,10 +317,10 @@ def _open_correction(viewer: napari.Viewer, out_dir: str, correction_method: str
     from napari.utils.notifications import show_error
     show_error(f"Manual correction tool is not installed: {correction_method}")
 
-@magic_factory(call_button="Run Analysis",
-               input_path={"label": "Input Data", "mode": "d"},
-               output_dir={"label": "Output Folder", "mode": "d"},
-               seg_method={"choices": lambda *args: get_algos("segmentation"), "label": "Segmentation"},
+@magic_factory(call_button="Run Analysis", 
+               input_path={"label": "Input Data", "mode": "d"}, 
+               output_dir={"label": "Output Folder", "mode": "d"}, 
+               seg_method={"choices": lambda *args: get_algos("segmentation"), "label": "Segmentation"}, 
                track_method={"choices": lambda *args: get_algos("tracking"), "label": "Tracking"})
 def make_cell_widget(
     viewer: napari.Viewer,
@@ -359,7 +365,7 @@ def make_cell_widget(
         return
 
     registry = load_registry()
-
+    
     s_info = registry["segmentation"].get(seg_method)
     if s_info and seg_method != SKIP_SEGMENTATION:
         script = resolve_algorithm_script(s_info["script"])
@@ -397,6 +403,12 @@ def _configure_correction_widget(widget):
         widget.primary_tracker.visible = bool(
             widget.consensus_assistance.value
         )
+        tracking_enabled = bool(widget.consensus_assistance.value)
+        widget.check_interior_ends.visible = tracking_enabled
+        widget.check_interior_starts.visible = tracking_enabled
+        widget.border_margin.visible = tracking_enabled and bool(
+            widget.check_interior_ends.value or widget.check_interior_starts.value
+        )
         mask_enabled = bool(widget.mask_consensus_assistance.value)
         widget.mask_reference_model.visible = mask_enabled
         widget.mask_consensus_mode.visible = mask_enabled
@@ -409,6 +421,8 @@ def _configure_correction_widget(widget):
         widget.mask_priority_iou.visible = custom_enabled
 
     widget.consensus_assistance.changed.connect(update_visibility)
+    widget.check_interior_ends.changed.connect(update_visibility)
+    widget.check_interior_starts.changed.connect(update_visibility)
     widget.mask_consensus_assistance.changed.connect(update_visibility)
     widget.mask_consensus_mode.changed.connect(update_visibility)
     update_visibility()
@@ -420,6 +434,9 @@ def _configure_correction_widget(widget):
                correction_method={"choices": get_correction_methods, "label": "Correction Tool"},
                consensus_assistance={"label": "Tracking consensus assistance"},
                primary_tracker={"choices": get_primary_tracking_methods, "label": "Primary Tracking Result"},
+               check_interior_ends={"label": "Review track endings inside the field"},
+               check_interior_starts={"label": "Also review new tracks inside the field"},
+               border_margin={"label": "Border margin (pixels)", "min": 0.0, "max": 10000.0, "step": 1.0},
                mask_consensus_assistance={"label": "Mask consensus assistance"},
                mask_reference_model={"choices": get_mask_reference_methods, "label": "Mask Reference"},
                mask_consensus_mode={"choices": [MASK_MODE_AUTOMATIC, MASK_MODE_CUSTOM], "label": "Mask Settings"},
@@ -432,6 +449,9 @@ def make_correction_widget(
     correction_method: str = CORRECTION_PLACEHOLDER,
     consensus_assistance: bool = False,
     primary_tracker: str = AUTO_PRIMARY_TRACKER,
+    check_interior_ends: bool = True,
+    check_interior_starts: bool = False,
+    border_margin: float = 15.0,
     mask_consensus_assistance: bool = False,
     mask_reference_model: str = AUTOMATIC_REFERENCE,
     mask_consensus_mode: str = MASK_MODE_AUTOMATIC,
@@ -505,6 +525,11 @@ def make_correction_widget(
                         out_dir,
                         primary,
                         True,
+                        boundary_settings=(BoundaryReviewSettings(
+                            check_ends=check_interior_ends,
+                            check_starts=check_interior_starts,
+                            edge_margin_px=float(border_margin),
+                        ) if check_interior_ends or check_interior_starts else None),
                         callback=report_progress,
                         cancel_check=progress.wasCanceled,
                     )

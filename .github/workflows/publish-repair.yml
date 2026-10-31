@@ -1,0 +1,62 @@
+name: Publish the tested v1.0.0 user package
+
+on:
+  push:
+    branches: [maintenance/publish-v1.0.0-20261031]
+    paths: [.github/workflows/publish-repair.yml]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    if: github.repository == 'sijunpeng123/Biotrack_Studio'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: driver
+      - uses: actions/checkout@v4
+        with:
+          ref: 4dcfc8b2807b78ac2988e8ff28f98da89da53547
+          fetch-depth: 0
+          path: source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Verify and replace the user package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python driver/.github/scripts/publish_repair.py
+          --source source
+          --manifest driver/.github/release_content_manifest.json
+          --commit 4dcfc8b2807b78ac2988e8ff28f98da89da53547
+          --ci-run 41218006300
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v1.0.0-installation-repair-verification
+          path: ${{ runner.temp }}/biotrack-repair/*.json
+      - name: Remove completed temporary maintenance branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          repository = 'sijunpeng123/Biotrack_Studio'
+          refs = {
+              'heads/maintenance/repair-v1.0.0-20261031': '4dcfc8b2807b78ac2988e8ff28f98da89da53547',
+              'heads/maintenance/publish-v1.0.0-20261031': os.environ['GITHUB_SHA'],
+          }
+          for ref, expected in refs.items():
+              current = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repository}/git/ref/{ref}'], text=True))
+              assert current['object']['sha'] == expected, 'Branch changed; do not remove it.'
+              subprocess.run(['gh', 'api', '--method', 'DELETE', f'repos/{repository}/git/refs/{ref}'], check=True)
+          print('Temporary maintenance branches removed; tested source remains on main and v1.0.0.')
+          PY

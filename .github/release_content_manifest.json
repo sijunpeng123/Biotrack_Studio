@@ -1,0 +1,422 @@
+[
+  {
+    "name": "BioTrack_Studio/ACKNOWLEDGEMENTS.md",
+    "size": 1275,
+    "sha256": "74397a6a3e1b728ab423af416fb925acf50ce62fd4871dc645d316d8318f2031"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/__init__.py",
+    "size": 580,
+    "sha256": "0efffd4d6c8557a5bbb29a85b63406ee217b841665c028dda60312a424e203fd"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/_runtime_helpers.py",
+    "size": 1469,
+    "sha256": "ce71de5d9fefab4807271dab0f90fd02c766a3ce3b4f19367d41550d65c6c8a4"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/boundary_review.py",
+    "size": 6064,
+    "sha256": "427a9877a6641273de7da085d54f2e49b4e87dea25b852cb37907537ddd2c73c"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/cloud_algos.json",
+    "size": 3,
+    "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/consensus_assist.py",
+    "size": 18136,
+    "sha256": "216ee36f1e06eff1c4a7fa14f9a5025735e7d3b80fafe74fcfab1395a7d8596d"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/consensus_core.py",
+    "size": 14837,
+    "sha256": "26fde05c4fc2190469006e97b23d762c0d13fb3a6ebed916cc9a9963cf2d00ec"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/consensus_review_model.py",
+    "size": 13332,
+    "sha256": "38299e4f0ad9bef324e1aa9f8794501cd95019e93524a3a3d5cf7762c66a52bb"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/consensus_review_panel.py",
+    "size": 29211,
+    "sha256": "789875fdf544d91906c6164156fa22a1e419d8b41ed416066614ffb46cb07681"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/engine.py",
+    "size": 4863,
+    "sha256": "99ecfbf8bd95ce6081eb0800965db94a138d7b871b82b9442a4dd403bc9178b1"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/env_manager.py",
+    "size": 3030,
+    "sha256": "a10d40a97cce461d915e9416081c05c9411d0ea8de2c0cfa4bf077e4163be5b5"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/mask_consensus.py",
+    "size": 27959,
+    "sha256": "bf933a62c1e889cec198284ee756e80964fc135c93919fa5fc122ce6a07cc47e"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/napari.yaml",
+    "size": 778,
+    "sha256": "6ce0b299e4b145f0ac601a6e792647c407d6433029e961358556b875a3789dec"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/paths.py",
+    "size": 2420,
+    "sha256": "bef492f72ab94aff79fca6cdd4b9e1495e17c7e057fd620fc27057b73943261e"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/registry.json",
+    "size": 890,
+    "sha256": "0e7631e7cfa12bc5241407c9d8090d1526159c7521a109f2d6e2c62b54cc7949"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/store_widget.py",
+    "size": 34786,
+    "sha256": "808f9045c8127b01d16483a3baee91050aa9233805ff8d823e8f1bd77ff3fdfe"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/utils.py",
+    "size": 1645,
+    "sha256": "94879ca0d4f55fccc86e4aba8b1f4cac47e48504c4fce6cfa5b163a993738f4d"
+  },
+  {
+    "name": "BioTrack_Studio/biotrack_studio/widget.py",
+    "size": 21910,
+    "sha256": "dd0e7079bf2e2b2c0fe62b5811fd49e5f830f21174b243ca7de812a99ad2ec4a"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/DATA_SOURCE.txt",
+    "size": 888,
+    "sha256": "ce1eec11247ebaa8d1523d7f20482e36c8a1012b7d0761059eb0a643cae223f4"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t000.tif",
+    "size": 281456,
+    "sha256": "063f4ea01f7882de1547898ae94e489288fa99e09321fc8d360cfd7f72d5401c"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t001.tif",
+    "size": 281456,
+    "sha256": "ddfa929245209a86cae1b063f9a68bdf1bcbcbb7a31be0c5a0b90e72e99673a0"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t002.tif",
+    "size": 281456,
+    "sha256": "5c79aec21ef84739a1c2aae5b285d126ab75c07ab65bb43fea9b8321387ddef3"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t003.tif",
+    "size": 281456,
+    "sha256": "48c714437a7318dbdf70771cb74fb6dc4b0d22f971ecb838aa492b6e83e03ade"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t004.tif",
+    "size": 281456,
+    "sha256": "7de4e9ff203b9406551722fff0cde5beb77bd5023ea968726fe8cfe43ae5b534"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t005.tif",
+    "size": 281456,
+    "sha256": "772b93cfea36cb24ece38bc2b147db3dd0708744b544169c981966295303a23a"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t006.tif",
+    "size": 281456,
+    "sha256": "72a13bcb1c940400917285045db04cd726c73bde8bac73c55c42e6460248d5b3"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t007.tif",
+    "size": 281456,
+    "sha256": "b3efd4fa0031d347dc3e5ea7793e4d991f24b6c8bad58375ec35f7676ec5bb31"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t008.tif",
+    "size": 281456,
+    "sha256": "e95f43f9df5bc427b8d701c7b509700466c81aed9d0708e35ceda618a69e5fbd"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t009.tif",
+    "size": 281456,
+    "sha256": "18c73bf02af50f72235470663b9866878f8a0b589ebef3e5c9a98c39b9064d71"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t010.tif",
+    "size": 281456,
+    "sha256": "2ed35bbad43c0e98175bb661e36be327b49f7ba8d45cbb6707de788b9e500975"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t011.tif",
+    "size": 281456,
+    "sha256": "903fee82815cc747db104fb31fd90b0c921db0a39507ae4bc69798d6275f7414"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t012.tif",
+    "size": 281456,
+    "sha256": "d6220601f2a7f91ebcd1863a40f2002681481817326c9940d705b4dd2f99c0ac"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t013.tif",
+    "size": 281456,
+    "sha256": "2f0d4f94edda03014ec79a5d9f9f3459a54b99854b32c07dd5f76f850a18cb5e"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t014.tif",
+    "size": 281456,
+    "sha256": "2bc07ecdf2585a84fcab3aced92ba89669a07c3987fd73f47d4a7c9d1fbddc31"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t015.tif",
+    "size": 281456,
+    "sha256": "b1f2b2cbacbb1b74bd092f9a3a778b34711bad20320f2a2374b33e18a452848d"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t016.tif",
+    "size": 281456,
+    "sha256": "2994f4ee8b61a515a62ff0f28ccd5aed4a43fec2009b6622b98c2255611b8a60"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t017.tif",
+    "size": 281456,
+    "sha256": "b847afd07c5326a0c612baf10590d413c7c736f1d87a194c9c2f5d05a7763bbe"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t018.tif",
+    "size": 281456,
+    "sha256": "033b7f7a540eef695ccf9980efc8d91c1d19ed441be22e7e8fa1689fe6a181b2"
+  },
+  {
+    "name": "BioTrack_Studio/demo_data/t019.tif",
+    "size": 281456,
+    "sha256": "59a23625d331c87cc0f048127986264d854cdd2e120def3d04ce15ab29ceaf3f"
+  },
+  {
+    "name": "BioTrack_Studio/docs/00_READ_ME_FIRST.txt",
+    "size": 1601,
+    "sha256": "9a50baa9c9002e3d921953cae9221fb4eb3e5d6eb8b5dc5c34464fc14eb75df3"
+  },
+  {
+    "name": "BioTrack_Studio/docs/BioTrack_Studio_Demo.ipynb",
+    "size": 18458,
+    "sha256": "ae8d2e208e6782929fd7ca1dac16761e1d6852ff55643411ffab6d233c8b5af2"
+  },
+  {
+    "name": "BioTrack_Studio/docs/BioTrack_Studio_User_Guide.pdf",
+    "size": 928689,
+    "sha256": "5ed4a3b6684ac3ea005c10c1f7335254b117acc25659f27322d1c39a340f9839"
+  },
+  {
+    "name": "BioTrack_Studio/docs/images/01_pipeline.png",
+    "size": 13802,
+    "sha256": "bd31f61a73e62ea6fb6df08c182767b75feec42028b23ae2bb9452af4239bb20"
+  },
+  {
+    "name": "BioTrack_Studio/docs/images/02_manual_correction.png",
+    "size": 23937,
+    "sha256": "770974fd324864335404c0675ffecdfab258ef6a30dd11eec61cb842a7f24f80"
+  },
+  {
+    "name": "BioTrack_Studio/docs/images/03_tracking_consensus_review.png",
+    "size": 289579,
+    "sha256": "ef2025c0b46dd265a1cc6b2537de2bb7086a7d6c58c5f8f357d5a5afff7e87a3"
+  },
+  {
+    "name": "BioTrack_Studio/docs/images/04_mask_consensus_review.png",
+    "size": 291300,
+    "sha256": "2d30b5a636444502ff713696dc26b3f8e3a5b5830920763efb85e585e7bdb96b"
+  },
+  {
+    "name": "BioTrack_Studio/docs/images/05_algorithm_store.png",
+    "size": 10813,
+    "sha256": "9bf7f6932920108f0adf7fc0e9948539701875b3cdaa86cd87cedcdad8093158"
+  },
+  {
+    "name": "BioTrack_Studio/docs/USER_PROTOCOL.md",
+    "size": 11880,
+    "sha256": "8305db278d285db9d174e37d238d2cffc98422686fec1aaebfe0dd9d7c5ffbdb"
+  },
+  {
+    "name": "BioTrack_Studio/environment.yml",
+    "size": 112,
+    "sha256": "1fa7922f9d2fc2011a0d2f035e9c06a0ff33c883c867ac6f17532e62037e44fa"
+  },
+  {
+    "name": "BioTrack_Studio/init_base_algos.py",
+    "size": 34056,
+    "sha256": "0b0592c1f9d081ef7f8cd6e420e90d041012f459ee2050d2220c9eb49867c0a1"
+  },
+  {
+    "name": "BioTrack_Studio/installer.py",
+    "size": 11639,
+    "sha256": "09f88e3891f86bf8aac1fdedf5e0ae634bb14ad7bac864fe5c120cbc6d5dbf86"
+  },
+  {
+    "name": "BioTrack_Studio/INSTALLER_CHECKSUMS.txt",
+    "size": 433,
+    "sha256": "2c15ebbcba829c7bb7aaac28fd1d9b8f567c03195d1d268d9259bd01811bd8f9"
+  },
+  {
+    "name": "BioTrack_Studio/installers/Miniforge3-Linux-x86_64.sh",
+    "size": 105172629,
+    "sha256": "848194851a98903134187fbb4ab50efe87b003e0c0f808f97644b7524a62bf2c"
+  },
+  {
+    "name": "BioTrack_Studio/installers/Miniforge3-MacOSX-arm64.sh",
+    "size": 53402258,
+    "sha256": "59168f1e24d0a4ad9932021170809fca836cd240e183eeeb331d5bcfc0098168"
+  },
+  {
+    "name": "BioTrack_Studio/installers/Miniforge3-MacOSX-x86_64.sh",
+    "size": 60470361,
+    "sha256": "39273e4c89a0a1af4538010615d44ae8f44e1af41007e02def593d20f316b003"
+  },
+  {
+    "name": "BioTrack_Studio/installers/Miniforge3-Windows-x86_64.exe",
+    "size": 78836352,
+    "sha256": "14a8635465b5190537ddad6286746ffebbc55a1ed2a7bb14a506595fe3191e1e"
+  },
+  {
+    "name": "BioTrack_Studio/launch_biotrack_studio.py",
+    "size": 13792,
+    "sha256": "b17c8f63890dc4d4a2518940d9fc761a3f8fe5374deb5c382129b7486d3e423e"
+  },
+  {
+    "name": "BioTrack_Studio/LICENSE",
+    "size": 35147,
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+  },
+  {
+    "name": "BioTrack_Studio/pyproject.toml",
+    "size": 1764,
+    "sha256": "30f39c3ca85dd5f86ec986ee485b0f8470a5672ddded804ab792b947c222eb63"
+  },
+  {
+    "name": "BioTrack_Studio/README.md",
+    "size": 10653,
+    "sha256": "35b82cdc77a16525a7759b469fcfb75a20d88d5881f7829bec037dd2bcbfb135"
+  },
+  {
+    "name": "BioTrack_Studio/registry.json",
+    "size": 918,
+    "sha256": "2702cd923e034e417171868790e1ad41fbf6c0f0f9e1908067abcbb34eecc406"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/LICENSE",
+    "size": 35147,
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/readme.md",
+    "size": 6668,
+    "sha256": "dafd8f55fa8c3079b06985c20cbe04c71bba93e52d1fdcb4a5442d6074352c04"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/requirements.txt",
+    "size": 154,
+    "sha256": "d205cde346faf40e7411fd8cf4f2d1b885ffdc7b77549fd5afc65903213350ce"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/__init__.py",
+    "size": 179,
+    "sha256": "33d2a29dd1ef30da5e0eac3d090ac0abd33f064640f0fcbe7da1099791812ab2"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/base.py",
+    "size": 26349,
+    "sha256": "8d5235ff786723d7c2b13cbcf8f4f57cef07c3ad59ad249fd727669d9947e7a0"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/config.py",
+    "size": 1359,
+    "sha256": "772476e6b14b3c35a4460711ba46cb85657a1cc59e531e12e72518e5bd2d240d"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/feature.py",
+    "size": 14908,
+    "sha256": "06e43f9ed937165360c32c0d45cf122b4654282a29461bed7ddd16351b7f1787"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/generate_tracking_stack.py",
+    "size": 9503,
+    "sha256": "6be55b6d5bcac5ff9f63abf2e55997ab46b3c245b9b1d55e601806c7f8e5b1a6"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/prepare.py",
+    "size": 2396,
+    "sha256": "d10ac709278a4c633c28c685c4386e330813d79725a14c938782a35eaf76e360"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/reclassification.py",
+    "size": 30693,
+    "sha256": "30e1261035e40c70e971ed91f364d6368cf45fc2d237e6b7a1b559e7777c0aa8"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/refiner.py",
+    "size": 18375,
+    "sha256": "0e5ff1b59e884a0ea7faecab72e6c4533aab3d7c7b9dded062077b656761858c"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/sctrack.py",
+    "size": 3577,
+    "sha256": "7d7cb48abf6e057aa62a1eae38cb36fcf935799f5488f965b80de267c799c8f7"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/t_error.py",
+    "size": 1683,
+    "sha256": "998baf8e0e9cba93b7d25d9fdcfac901114d7e00df7667eb818a1121da33cdd9"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/template.py",
+    "size": 535,
+    "sha256": "12c7457de2ef2d40006aef0571cde81e7617d1b34942f5d648ae5d94798ad891"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/track.py",
+    "size": 1753,
+    "sha256": "cf23b2a22942ec94aae6e797cf5782a827bf2efcf5cca4197c99c34eec8d304d"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/tracker.py",
+    "size": 50255,
+    "sha256": "bb3a93eae3d92103d12104c557a4301b9614e4e43c44b90f075ee6ddb6363436"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/SCTrack/utils.py",
+    "size": 6939,
+    "sha256": "a854c842d093fe7c34c95e2ef900cf8311d691dd2e50d6e16987936db088ac9a"
+  },
+  {
+    "name": "BioTrack_Studio/SC-Track/setup.py",
+    "size": 1012,
+    "sha256": "123b82079876acbc4d4e1ab90d664275a0abc6693da81b12ff798a08aab47e58"
+  },
+  {
+    "name": "BioTrack_Studio/setup_conda.bat",
+    "size": 5008,
+    "sha256": "2e6a8a013856892fcc9114ea3a55fdabe995f44ed6e9474851376bcd29a44da4"
+  },
+  {
+    "name": "BioTrack_Studio/setup_conda.sh",
+    "size": 5184,
+    "sha256": "3a970a816116d2d0452b2e520704f00bff7f594a6c24e607e3d76ddc201b7476"
+  },
+  {
+    "name": "BioTrack_Studio/start.sh",
+    "size": 3029,
+    "sha256": "e68702b7cb8ad2af819bd7978e227f36a7ee68f538225a17e3d7d1ac0cfbd9a5"
+  },
+  {
+    "name": "BioTrack_Studio/THIRD_PARTY_NOTICES.md",
+    "size": 2395,
+    "sha256": "93b3512cc82cf4f4c76f0234a03b2dba7ecc2f0fb76007a80f1871ac9b31d901"
+  },
+  {
+    "name": "BioTrack_Studio/winstart.bat",
+    "size": 3913,
+    "sha256": "719ac964688976797f02df9ce8d6f974dd0f8f0ab2b7db0938f7e505b1b2c9e2"
+  }
+]

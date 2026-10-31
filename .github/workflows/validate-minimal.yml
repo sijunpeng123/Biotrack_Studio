@@ -13,13 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
       PYTHONNOUSERSITE: "1"
       QT_QPA_PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'xcb' || matrix.os == 'macos-latest' && 'cocoa' || 'windows' }}
       LIBGL_ALWAYS_SOFTWARE: "1"
+      QT_OPENGL: software
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

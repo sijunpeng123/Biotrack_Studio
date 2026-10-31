@@ -687,6 +687,13 @@ def add_tracks_layer(viewer, output_dir, mask=None):
     if not tracks.empty:
         viewer.add_tracks(tracks.to_numpy(), name="Tracks")
 
+def initialize_mmv_workspace(widget, mask):
+    if mask is not None:
+        widget.initial_layers = [mask.copy()]
+    widget.combobox_image.setCurrentText("Raw")
+    widget.combobox_segmentation.setCurrentText("Mask")
+    widget.combobox_tracks.setCurrentText("Tracks")
+
 def main():
     output_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
     image_path = os.path.join(output_dir, "image.tif")
@@ -706,6 +713,7 @@ def main():
         correction_dock, _ = viewer.window.add_plugin_dock_widget(
             plugin_name="mmv_h4tracks"
         )
+        initialize_mmv_workspace(correction_dock.widget(), mask)
     except Exception as e:
         print(f"Cannot open MMV_H4Tracks: {e}")
     try:

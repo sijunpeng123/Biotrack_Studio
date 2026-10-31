@@ -59,8 +59,7 @@ def run(tool, output):
             namespace["add_tracks_layer"](viewer, str(output), mask)
             dock, _ = viewer.window.add_plugin_dock_widget(plugin_name="mmv_h4tracks")
             plugin = dock.widget()
-            plugin.combobox_segmentation.setCurrentText("Mask")
-            plugin.combobox_tracks.setCurrentText("Tracks")
+            namespace["initialize_mmv_workspace"](plugin, mask)
             plugin.tracking_window.update_all_centroids()
             tracks = viewer.layers["Tracks"]
             assert len(tracks.data) == 5

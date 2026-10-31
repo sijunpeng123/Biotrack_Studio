@@ -52,7 +52,6 @@ def check(name, output):
                         "--output", str(output)], check=True)
         return
     import numpy as np
-    import pandas as pd
     import tifffile
 
     script = output / "adapter.py"
@@ -77,6 +76,8 @@ def check(name, output):
     mask = tifffile.imread(output / "mask.tif")
     assert mask.ndim == 3 and mask.shape[0] == 20 and np.issubdtype(mask.dtype, np.integer) and mask.max() > 0
     if category == "tracking":
+        import pandas as pd
+
         rows = pd.read_csv(output / "track.csv")
         assert len(rows) > 0 and (output / "config.yaml").is_file()
         assert not rows.duplicated(["frame", "continuous_label"]).any()

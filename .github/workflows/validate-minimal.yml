@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
@@ -30,7 +30,10 @@ jobs:
         run: python .github/scripts/install_mmv_validation.py
       - name: Install Linux display dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb libegl1 libgl1 libopengl0 libxcb-cursor0 libxkbcommon-x11-0
+        run: sudo apt-get update && sudo apt-get install -y xvfb libegl1 libgl1 libopengl0 libxcb-cursor0 libxkbcommon-x11-0 libx11-xcb1 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-randr0 libxcb-xinerama0 libxcb-xkb1
+      - name: Check the Qt Linux platform dependencies
+        if: runner.os == 'Linux'
+        run: python -c "import pathlib, subprocess, PyQt6; subprocess.run(['ldd', str(pathlib.Path(PyQt6.__file__).parent / 'Qt6/plugins/platforms/libqxcb.so')], check=True)"
       - name: Test native MMV update and saving on Linux
         if: runner.os == 'Linux'
         run: xvfb-run -a python -m unittest discover -s tests -p test_mmv_compatibility.py -v

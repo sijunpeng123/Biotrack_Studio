@@ -1,0 +1,38 @@
+name: Validate restricted MMV repair
+
+on:
+  push:
+    branches: [maintenance/validate-minimal-20261101]
+    paths: [.github/workflows/validate-minimal.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  mmv-native-roundtrip:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      PYTHONNOUSERSITE: "1"
+      QT_QPA_PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'xcb' || matrix.os == 'macos-latest' && 'cocoa' || 'windows' }}
+      LIBGL_ALWAYS_SOFTWARE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install the candidate's MMV dependencies
+        run: python .github/scripts/install_mmv_validation.py
+      - name: Install Linux display dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libxcb-cursor0 libxkbcommon-x11-0
+      - name: Test native MMV update and saving on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python -m unittest discover -s tests -p test_mmv_compatibility.py -v
+      - name: Test native MMV update and saving
+        if: runner.os != 'Linux'
+        run: python -m unittest discover -s tests -p test_mmv_compatibility.py -v

@@ -25,8 +25,10 @@ class StarDistInstallationTests(unittest.TestCase):
             with self.subTest(system=system, machine=machine), patch.object(
                 installer.platform, "system", return_value=system
             ), patch.object(installer.platform, "machine", return_value=machine):
-                self.assertEqual(installer.stardist_framework_packages(hardware),
-                                 [framework, "numpy==1.26.4", dtypes])
+                expected = [framework, "numpy==1.26.4", dtypes]
+                if system == "Darwin" and machine == "x86_64":
+                    expected.extend(["numba==0.62.1", "llvmlite==0.45.1"])
+                self.assertEqual(installer.stardist_framework_packages(hardware), expected)
 
     def run_install(self, compatible, name="stardist", hardware="cuda"):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:

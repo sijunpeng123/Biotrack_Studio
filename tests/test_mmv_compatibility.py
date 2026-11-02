@@ -53,6 +53,8 @@ class MMVInstallationTests(unittest.TestCase):
     def test_launcher_does_not_skip_mmv_dependency_repair(self):
         with patch.object(launcher, "run_capture", return_value="READY\n"), patch.object(
             launcher, "env_imports_ready", return_value=True
+        ), patch.object(
+            installer, "stardist_dependencies_compatible", return_value=True
         ), patch.object(launcher, "log"), patch.object(installer, "mmv_dependencies_compatible", return_value=False):
             self.assertFalse(launcher.algorithms_ready("conda"))
 

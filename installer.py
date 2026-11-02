@@ -124,7 +124,8 @@ def mmv_dependencies_compatible(conda_cmd, env_name):
 def stardist_framework_packages(hw_type):
     system = platform.system()
     if system == "Darwin" and platform.machine() == "x86_64":
-        return ["tensorflow==2.16.2", "numpy==1.26.4", "ml-dtypes==0.3.2"]
+        return ["tensorflow==2.16.2", "numpy==1.26.4", "ml-dtypes==0.3.2",
+                "numba==0.62.1", "llvmlite==0.45.1"]
     framework = "tensorflow-cpu"
     if system == "Darwin":
         framework = "tensorflow"

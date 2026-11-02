@@ -92,7 +92,6 @@ def find_boundary_events(mask, primary_rows, settings=None, *, edge_distances=No
     """Find primary endpoints, excluding acquisition boundaries and known divisions.
 
     Later observations of the same track (including gaps) prevent an end flag.
-    The adjustable margin is an exploratory setting, not a fitted optimum.
     """
     settings = settings or BoundaryReviewSettings()
     settings.validate()

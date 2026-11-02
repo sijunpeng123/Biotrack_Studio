@@ -121,6 +121,44 @@ def mmv_dependencies_compatible(conda_cmd, env_name):
     return True
 
 
+def stardist_framework_packages(hw_type):
+    system = platform.system()
+    if system == "Darwin" and platform.machine() == "x86_64":
+        return ["tensorflow==2.16.2", "numpy==1.26.4", "ml-dtypes==0.3.2"]
+    framework = "tensorflow-cpu"
+    if system == "Darwin":
+        framework = "tensorflow"
+    elif system == "Linux" and hw_type == "cuda":
+        framework = "tensorflow[and-cuda]"
+    return [f"{framework}==2.21.0", "numpy==1.26.4", "ml-dtypes==0.5.4"]
+
+
+def stardist_dependencies_compatible(conda_cmd, env_name):
+    requirements = stardist_framework_packages("cpu")
+    framework_version = requirements[0].split("==")[1]
+    versions = dict(requirement.split("==") for requirement in requirements[1:])
+    code = (
+        "from importlib.metadata import distributions; "
+        "installed = {d.metadata['Name'].lower().replace('_', '-'): d.version for d in distributions()}; "
+        f"expected = {versions!r}; "
+        "frameworks = [installed[name] for name in "
+        "('tensorflow', 'tensorflow-cpu', 'tensorflow-intel', 'tensorflow-macos') if name in installed]; "
+        f"assert frameworks and all(value == {framework_version!r} for value in frameworks); "
+        "assert all(installed.get(name) == value for name, value in expected.items())"
+    )
+    try:
+        subprocess.run(
+            [conda_cmd, "run", "-n", env_name, "python", "-c", code],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=get_subprocess_env(),
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return True
+
+
 def install_algorithm(algo_name, category, dependencies, script_content):
     env_name, script_name = f"env_{category}_{algo_name}", f"step_{category}_{algo_name}.py"
     print(f"\n[Build] Constructing isolated environment {env_name}...")
@@ -132,6 +170,8 @@ def install_algorithm(algo_name, category, dependencies, script_content):
     dependencies_ready = environment_exists and _imports_ready(
         conda_cmd, env_name, expected_modules
     )
+    if dependencies_ready and algo_name == "stardist":
+        dependencies_ready = stardist_dependencies_compatible(conda_cmd, env_name)
 
     # Phase 1: Conda environment creation with fallback
     if environment_exists:
@@ -156,25 +196,24 @@ def install_algorithm(algo_name, category, dependencies, script_content):
         hw_type = get_hardware()
 
         # Phase 2: Deep learning framework injection
-        if "stardist" in algo_name and platform.system() == "Darwin":
-            print("[Build] Injecting TensorFlow for Mac...")
-            _pip_install(conda_cmd, env_name, ["tensorflow"])
+        if "stardist" in algo_name:
+            if environment_exists:
+                subprocess.run(
+                    [conda_cmd, "run", "-n", env_name, "python", "-m", "pip", "uninstall", "-y",
+                     "tensorflow", "tensorflow-cpu", "tensorflow-intel", "tensorflow-macos"],
+                    check=True, env=get_subprocess_env(),
+                )
+            _pip_install(conda_cmd, env_name, stardist_framework_packages(hw_type))
         elif hw_type == "cuda":
             print("[Build] Injecting framework for GPU...")
-            if "cellpose" in algo_name or "cellsam" in algo_name:
-                _pip_install(conda_cmd, env_name, ["torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cu118"])
-            elif "stardist" in algo_name:
-                _pip_install(conda_cmd, env_name, ["tensorflow[and-cuda]"])
+            if "cellpose" in algo_name or "cellsam" in algo_name or "ultrack" in algo_name:
+                _pip_install(conda_cmd, env_name, ["torch==2.7.1", "torchvision==0.22.1", "--index-url", "https://download.pytorch.org/whl/cu118"])
         elif hw_type == "mps":
             print("[Build] Injecting framework for Mac...")
             if "cellpose" in algo_name or "cellsam" in algo_name:
                 _pip_install(conda_cmd, env_name, ["torch", "torchvision"])
-            elif "stardist" in algo_name:
-                _pip_install(conda_cmd, env_name, ["tensorflow"])
         else:
             print("[Build] Falling back to CPU mode...")
-            if "stardist" in algo_name:
-                _pip_install(conda_cmd, env_name, ["tensorflow-cpu"])
 
         clean_deps = [d for d in deps_list if not d.startswith("tensorflow") and not d.startswith("torch")]
 
@@ -247,6 +286,8 @@ def install_correction_plugin(
     if dependencies_ready:
         print(f"[Build] Dependencies in {env_name} are already available. Skipping pip installation.")
     else:
+        if plugin_name == "MMV_H4Tracks" and get_hardware() == "cuda":
+            _pip_install(conda_cmd, env_name, ["torch==2.7.1", "torchvision==0.22.1", "--index-url", "https://download.pytorch.org/whl/cu118"])
         deps_list = dependencies.split()
         if deps_list:
             try:

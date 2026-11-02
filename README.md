@@ -70,6 +70,12 @@ For later sessions, run `bash start.sh`.
 The first launch creates the application and algorithm environments. If setup is
 interrupted, run the same launcher again; completed steps are reused.
 
+StarDist uses TensorFlow on the CPU on native Windows. Apple Silicon and Linux
+use TensorFlow 2.21.0; Intel Macs use the last supported Intel release, 2.16.2.
+The installer keeps NumPy and ml-dtypes compatible with that framework and repairs
+an existing incompatible StarDist environment. NVIDIA installations of Cellpose,
+Ultrack, and MMV use the CUDA 11.8 PyTorch build; macOS uses its native packages.
+
 ## Input Format
 
 The graphical Pipeline accepts an input folder containing one single-channel

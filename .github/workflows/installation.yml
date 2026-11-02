@@ -1,0 +1,67 @@
+name: Installation compatibility
+
+on:
+  push:
+    branches: [maintenance/repair-v1.0.0-20261031, main]
+    paths:
+      - 'installer.py'
+      - 'init_base_algos.py'
+      - 'tests/test_stardist_installation.py'
+      - 'tests/test_mmv_compatibility.py'
+      - '.github/scripts/validate_stardist.py'
+      - '.github/scripts/install_mmv_validation.py'
+      - '.github/workflows/installation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stardist-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      PYTHONNOUSERSITE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install exact requirements and run real StarDist
+        run: python .github/scripts/validate_stardist.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stardist-${{ matrix.os }}
+          path: ${{ runner.temp }}/biotrack_stardist_validation/result.json
+
+  mmv-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      PYTHONNOUSERSITE: "1"
+      QT_QPA_PLATFORM: ${{ matrix.os == 'ubuntu-latest' && 'xcb' || 'cocoa' }}
+      LIBGL_ALWAYS_SOFTWARE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install candidate MMV requirements
+        run: python .github/scripts/install_mmv_validation.py
+      - name: Install Linux display libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libegl1 libgl1 libopengl0 libxcb-cursor0 libxkbcommon-x11-0 libx11-xcb1 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-randr0 libxcb-xinerama0 libxcb-xkb1 libxcb-shape0
+      - name: Native MMV update and save on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python -m unittest discover -s tests -p test_mmv_compatibility.py -v
+      - name: Native MMV update and save on macOS
+        if: runner.os == 'macOS'
+        run: python -m unittest discover -s tests -p test_mmv_compatibility.py -v

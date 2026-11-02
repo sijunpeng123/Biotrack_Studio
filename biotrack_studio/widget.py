@@ -228,23 +228,18 @@ def validate_correction_selection(correction_method: str):
 def _find_env_python(env_name: str):
     try:
         result = subprocess.run(
-            [get_env_cmd(), "env", "list", "--json"],
+            [get_env_cmd(), "run", "-n", env_name, "python", "-c", "import sys; print(sys.executable)"],
             check=True,
             capture_output=True,
             text=True,
             env=get_subprocess_env(),
         )
-        envs = json.loads(result.stdout).get("envs", [])
+        python_path = Path(result.stdout.strip())
     except Exception:
         return None
 
-    for env_path in envs:
-        prefix = Path(env_path)
-        if prefix.name.lower() != env_name.lower():
-            continue
-        python_path = prefix / ("python.exe" if os.name == "nt" else "bin/python")
-        if python_path.exists():
-            return str(python_path)
+    if python_path.is_file():
+        return str(python_path)
     return None
 
 def _correction_subprocess_env():
@@ -312,10 +307,10 @@ def _open_correction(viewer: napari.Viewer, out_dir: str, correction_method: str
     from napari.utils.notifications import show_error
     show_error(f"Manual correction tool is not installed: {correction_method}")
 
-@magic_factory(call_button="Run Analysis", 
-               input_path={"label": "Input Data", "mode": "d"}, 
-               output_dir={"label": "Output Folder", "mode": "d"}, 
-               seg_method={"choices": lambda *args: get_algos("segmentation"), "label": "Segmentation"}, 
+@magic_factory(call_button="Run Analysis",
+               input_path={"label": "Input Data", "mode": "d"},
+               output_dir={"label": "Output Folder", "mode": "d"},
+               seg_method={"choices": lambda *args: get_algos("segmentation"), "label": "Segmentation"},
                track_method={"choices": lambda *args: get_algos("tracking"), "label": "Tracking"})
 def make_cell_widget(
     viewer: napari.Viewer,
@@ -360,7 +355,7 @@ def make_cell_widget(
         return
 
     registry = load_registry()
-    
+
     s_info = registry["segmentation"].get(seg_method)
     if s_info and seg_method != SKIP_SEGMENTATION:
         script = resolve_algorithm_script(s_info["script"])

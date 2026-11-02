@@ -2,6 +2,7 @@ import ast
 from contextlib import ExitStack
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -27,6 +28,7 @@ class MMVInstallationTests(unittest.TestCase):
     def run_install(self, tool, compatible):
         with tempfile.TemporaryDirectory() as temporary, ExitStack() as stack:
             stack.enter_context(patch.object(installer, "get_conda_cmd", return_value="conda"))
+            stack.enter_context(patch.object(installer, "get_hardware", return_value="cpu"))
             stack.enter_context(patch.object(installer, "env_exists", return_value=True))
             stack.enter_context(patch.object(installer, "_imports_ready", return_value=True))
             check = stack.enter_context(patch.object(installer, "mmv_dependencies_compatible", return_value=compatible))
@@ -61,6 +63,38 @@ class MMVInstallationTests(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec("mmv_h4tracks"), "Run inside an MMV correction environment")
 class MMVNativeCompatibilityTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == "nt", "Windows extended-path compatibility")
+    def test_windows_long_path_save_reopen(self):
+        import napari
+        from mmv_h4tracks import _reader, _widget, _writer
+
+        namespace = {"__name__": "mmv_long_path_test"}
+        exec(compile(mmv_template(), "c_h4tracks", "exec"), namespace)
+        namespace["_configure_mmv_long_paths"]()
+        configured_writer = _widget.save_zarr
+        namespace["_configure_mmv_long_paths"]()
+        self.assertIs(_widget.save_zarr, configured_writer)
+        mask = np.zeros((3, 32, 32), np.uint16)
+        mask[:, 10:14, 10:14] = 1
+        viewer = napari.Viewer(show=True)
+        try:
+            raw = viewer.add_image(mask.astype(np.uint8))
+            labels = viewer.add_labels(mask)
+            tracks = viewer.add_tracks(np.array([[1, frame, 11, 11] for frame in range(3)]))
+            with tempfile.TemporaryDirectory() as directory:
+                output = Path(directory) / ("model_" + "a" * 50) / ("result_" + "b" * 35) / "corrected.zarr"
+                while len(str(output / "segmentation_data/c/0/0/0.0123456789abcdef0123456789abcdef.partial")) <= 260:
+                    output = output.parent / ("nested_" + "c" * 20) / output.name
+                output.parent.mkdir(parents=True)
+                self.assertGreater(len(str(output / "segmentation_data/c/0/0/0.0123456789abcdef0123456789abcdef.partial")), 260)
+                with patch.object(_writer, "notify"):
+                    _widget.save_zarr(str(output), [raw, labels, tracks])
+                reopened, _ = _reader.zarr_reader(str(output))
+                np.testing.assert_array_equal(reopened["segmentation_data"][:], mask)
+                self.assertEqual(len(reopened["tracking_data"][:]), 3)
+        finally:
+            viewer.close()
+
     def test_centroid_update_and_native_save_reopen(self):
         import napari
         import pandas as pd

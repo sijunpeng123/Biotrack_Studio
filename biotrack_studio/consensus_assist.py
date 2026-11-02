@@ -139,8 +139,6 @@ def track_coverage(normalized: pd.DataFrame, mask_object_count: int) -> dict:
     }
 
 
-
-
 def _trackpy_registration() -> dict:
     from biotrack_studio.paths import load_registry, resolve_algorithm_script
 
@@ -151,8 +149,6 @@ def _trackpy_registration() -> dict:
     if not info.get("env") or not script.is_file():
         raise RuntimeError("TrackPy environment or launcher script is unavailable")
     return {**info, "script": str(script)}
-
-
 
 
 def run_trackpy_reference(

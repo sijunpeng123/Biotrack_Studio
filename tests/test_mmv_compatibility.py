@@ -32,6 +32,7 @@ class MMVInstallationTests(unittest.TestCase):
             stack.enter_context(patch.object(installer, "env_exists", return_value=exists))
             stack.enter_context(patch.object(installer, "_imports_ready", return_value=imports_ready))
             stack.enter_context(patch.object(installer.subprocess, "run"))
+            stack.enter_context(patch.object(installer, "get_subprocess_env", return_value={}))
             check = stack.enter_context(patch.object(installer, "mmv_dependencies_compatible", return_value=compatible))
             pip = stack.enter_context(patch.object(installer, "_pip_install"))
             stack.enter_context(patch.object(installer, "_verify_imports"))

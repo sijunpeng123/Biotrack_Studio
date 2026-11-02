@@ -28,6 +28,8 @@ try:
         CONNECTION_DIFFERENCE,
         NO_ISSUE,
         PRIMARY_UNTRACKED,
+        INTERIOR_END,
+        INTERIOR_START,
         PROBLEM,
         UNREVIEWED,
         ReviewStatusStore,
@@ -46,6 +48,8 @@ except ImportError:
         CONNECTION_DIFFERENCE,
         NO_ISSUE,
         PRIMARY_UNTRACKED,
+        INTERIOR_END,
+        INTERIOR_START,
         PROBLEM,
         UNREVIEWED,
         ReviewStatusStore,
@@ -66,6 +70,8 @@ CURRENT_COLOR = "#00d6c9"
 ALL_SITES = "All sites"
 CONNECTION_SITES = "Connection differences"
 UNTRACKED_SITES = "Untracked objects"
+INTERIOR_END_SITES = "Interior track endings"
+INTERIOR_START_SITES = "Interior track starts"
 HIGH_PRIORITY_SITES = "High priority"
 LOW_PRIORITY_SITES = "Low priority"
 NEEDS_ATTENTION = "Needs attention"
@@ -307,6 +313,9 @@ class ConsensusReviewPanel(QWidget):
             self.site_filter.addItems(
                 [CONNECTION_SITES, UNTRACKED_SITES, ALL_SITES]
             )
+            if self.mode_events["reason"].isin([INTERIOR_END, INTERIOR_START]).any():
+                self.site_filter.addItems([INTERIOR_END_SITES, INTERIOR_START_SITES])
+                self.site_filter.setCurrentText(ALL_SITES)
         else:
             self.site_filter.addItems(
                 [HIGH_PRIORITY_SITES, LOW_PRIORITY_SITES, ALL_SITES]
@@ -324,6 +333,10 @@ class ConsensusReviewPanel(QWidget):
                 table = table[table["reason"] == CONNECTION_DIFFERENCE]
             elif site == UNTRACKED_SITES:
                 table = table[table["reason"] == PRIMARY_UNTRACKED]
+            elif site == INTERIOR_END_SITES:
+                table = table[table["reason"] == INTERIOR_END]
+            elif site == INTERIOR_START_SITES:
+                table = table[table["reason"] == INTERIOR_START]
         elif site == HIGH_PRIORITY_SITES:
             table = table[table["severity"].astype(str).str.lower() == "high"]
         elif site == LOW_PRIORITY_SITES:
@@ -403,6 +416,9 @@ class ConsensusReviewPanel(QWidget):
                 f"{int(reasons.get(CONNECTION_DIFFERENCE, 0))} connection differences | "
                 f"{int(reasons.get(PRIMARY_UNTRACKED, 0))} untracked objects"
             )
+            if reasons.get(INTERIOR_END, 0) or reasons.get(INTERIOR_START, 0):
+                categories += (f"\n{int(reasons.get(INTERIOR_END, 0))} interior endings | "
+                               f"{int(reasons.get(INTERIOR_START, 0))} interior starts")
         else:
             severities = self.mode_events["severity"].astype(str).str.lower().value_counts()
             categories = (
@@ -512,7 +528,17 @@ class ConsensusReviewPanel(QWidget):
         primary_choice = str(
             event.get(f"{primary_name}_successor", "")
         )
-        if primary_choice == "ABSENT":
+        reason = str(event.get("reason", ""))
+        self.choices_box.setTitle(
+            "Endpoint check" if reason in (INTERIOR_END, INTERIOR_START) else "Tracker choices"
+        )
+        if reason in (INTERIOR_END, INTERIOR_START):
+            action = "ends" if reason == INTERIOR_END else "starts"
+            explanation = (
+                f"The {primary_name} track {action} away from the image border. "
+                "Check the adjacent frames; this is a review prompt."
+            )
+        elif primary_choice == "ABSENT":
             explanation = (
                 f"{primary_name} does not contain this segmented object."
             )
@@ -527,6 +553,11 @@ class ConsensusReviewPanel(QWidget):
             f"{explanation}"
         )
         self.choices.setText(describe_choices(event, self.tracker_names))
+        if reason in (INTERIOR_END, INTERIOR_START):
+            self.choices.setText(
+                f"Nearest labelled pixel to border: {float(event['edge_distance_px']):g} px\n"
+                f"Border margin: {float(event['edge_margin_px']):g} px"
+            )
 
     def _show_mask_event(self, event) -> None:
         reasons = {

@@ -169,10 +169,13 @@ def safe_symlink(self, target, target_is_directory=False):
     try:
         _original_symlink(self, target, target_is_directory)
     except OSError:
-        if target.is_dir():
-            shutil.copytree(target, self, dirs_exist_ok=True)
+        source = Path(target)
+        if not source.is_absolute():
+            source = self.parent / source
+        if source.is_dir():
+            shutil.copytree(source, self, dirs_exist_ok=True)
         else:
-            shutil.copy2(target, self)
+            shutil.copy2(source, self)
 Path.symlink_to = safe_symlink
 # ------------------------------------------------
 
@@ -627,7 +630,7 @@ CONSENSUS_SUPPORT_FILES = {
     "mask_consensus.py": (_support_root / "mask_consensus.py").read_text(encoding="utf-8"),
 }
 
-c_h4tracks = '''import sys
+c_h4tracks = r'''import sys
 import os
 import tifffile
 import pandas as pd
@@ -687,6 +690,44 @@ def add_tracks_layer(viewer, output_dir, mask=None):
     if not tracks.empty:
         viewer.add_tracks(tracks.to_numpy(), name="Tracks")
 
+def _windows_zarr_path(path):
+    if os.name != "nt" or not isinstance(path, (str, os.PathLike)):
+        return path
+    path = os.path.abspath(os.path.normpath(path))
+    prefix = "\\\\?\\"
+    if path.startswith(prefix):
+        return path
+    if path.startswith("\\\\"):
+        return prefix + "UNC\\" + path[2:]
+    return prefix + path
+
+def _configure_mmv_long_paths():
+    if os.name != "nt":
+        return
+    from mmv_h4tracks import _reader, _widget, _writer
+    if getattr(_writer, "_biotrack_long_paths", False):
+        return
+    native_save = _writer.save_zarr
+    native_reader = _reader.zarr_reader
+
+    def save_zarr(path, layers):
+        return native_save(_windows_zarr_path(path), layers)
+
+    def zarr_reader(path):
+        return native_reader(_windows_zarr_path(path))
+
+    _writer.save_zarr = _widget.save_zarr = save_zarr
+    _reader.zarr_reader = zarr_reader
+    _writer._biotrack_long_paths = True
+
+def initialize_mmv_workspace(widget, mask):
+    _configure_mmv_long_paths()
+    if mask is not None:
+        widget.initial_layers = [mask.copy()]
+    widget.combobox_image.setCurrentText("Raw")
+    widget.combobox_segmentation.setCurrentText("Mask")
+    widget.combobox_tracks.setCurrentText("Tracks")
+
 def main():
     output_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
     image_path = os.path.join(output_dir, "image.tif")
@@ -706,6 +747,7 @@ def main():
         correction_dock, _ = viewer.window.add_plugin_dock_widget(
             plugin_name="mmv_h4tracks"
         )
+        initialize_mmv_workspace(correction_dock.widget(), mask)
     except Exception as e:
         print(f"Cannot open MMV_H4Tracks: {e}")
     try:
@@ -725,7 +767,7 @@ if __name__ == "__main__":
     main()'''
 install_correction_plugin(
     "MMV_H4Tracks",
-    "napari[all] mmv_h4tracks==1.3.0 pandas tifffile imagecodecs",
+    "napari[all] mmv_h4tracks==1.3.0 pandas==2.2.3 tifffile imagecodecs",
     c_h4tracks,
     python_version="3.11",
     support_files=CONSENSUS_SUPPORT_FILES,

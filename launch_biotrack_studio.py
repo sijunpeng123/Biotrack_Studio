@@ -294,6 +294,14 @@ print("READY")
             log(f"Bundled algorithm environment is incomplete: {env_name}")
             return False
 
+    from installer import mmv_dependencies_compatible, stardist_dependencies_compatible
+    if not stardist_dependencies_compatible(conda, "env_segmentation_stardist"):
+        log("StarDist requires compatible TensorFlow and NumPy versions; retrying initialization.")
+        return False
+    if not mmv_dependencies_compatible(conda, "env_correction_mmv_h4tracks"):
+        log("MMV_H4Tracks requires its compatible pandas version; retrying initialization.")
+        return False
+
     return True
 
 

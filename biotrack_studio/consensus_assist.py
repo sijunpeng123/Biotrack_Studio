@@ -21,12 +21,9 @@ from .consensus_core import (
     object_stats,
     run_consensus,
 )
+from .boundary_review import BoundaryReviewSettings
+from ._runtime_helpers import _find_conda_executable, _unique_run_dir
 
-
-try:
-    from ._runtime_helpers import _find_conda_executable, _unique_run_dir
-except ImportError:
-    from _runtime_helpers import _find_conda_executable, _unique_run_dir
 
 ProgressCallback = Callable[[str], None]
 CancelCheck = Callable[[], bool]
@@ -255,6 +252,7 @@ def build_assisted_correction(
     *,
     assistance_root: str | Path | None = None,
     reference_track: str | Path | None = None,
+    boundary_settings: BoundaryReviewSettings | None = None,
     minimum_coverage: float = 0.5,
     callback: ProgressCallback | None = None,
     cancel_check: CancelCheck | None = None,
@@ -263,6 +261,8 @@ def build_assisted_correction(
         raise ValueError("Primary tracker name contains unsupported characters")
     if primary_name.lower() == REFERENCE_TRACKER:
         raise ValueError("TrackPy cannot be compared with itself in the first release")
+    if boundary_settings is not None:
+        boundary_settings.validate()
     validated = validate_pipeline_result(result_dir)
     result_dir = validated["result_dir"]
     assistance_root = (
@@ -317,7 +317,8 @@ def build_assisted_correction(
             )
 
     (workspace / "workspace.json").write_text(
-        json.dumps({"trackers": [primary_name, REFERENCE_TRACKER]}, indent=2),
+        json.dumps({"trackers": [primary_name, REFERENCE_TRACKER],
+                    **({"boundary_review": boundary_settings.to_dict()} if boundary_settings else {})}, indent=2),
         encoding="utf-8",
     )
     _notify(callback, "Comparing primary tracking with TrackPy...")
@@ -386,6 +387,11 @@ def build_assisted_correction(
         "connection_difference_rate_percent": connection_rate,
         "warnings": warnings,
     }
+    if boundary_settings is not None:
+        summary.update(review_sites=consensus_summary["review_sites"],
+                       boundary_review=consensus_summary["boundary_review"],
+                       interior_track_end_sites=consensus_summary["interior_track_end_sites"],
+                       interior_track_start_sites=consensus_summary["interior_track_start_sites"])
     (run_dir / "assist_summary.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"
     )
@@ -398,7 +404,10 @@ def build_assisted_correction(
         callback,
         "Assisted correction ready: "
         f"{connection_sites} connection differences and "
-        f"{untracked_sites} untracked objects.",
+        f"{untracked_sites} untracked objects."
+        + (f" {consensus_summary['interior_track_end_sites']} interior endings and "
+           f"{consensus_summary['interior_track_start_sites']} interior starts."
+           if boundary_settings is not None else ""),
     )
     return summary
 

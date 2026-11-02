@@ -11,6 +11,7 @@ from .env_manager import get_env_cmd, get_subprocess_env
 from .paths import load_registry, resolve_algorithm_script
 from .utils import prepare_standard_tif
 from .consensus_assist import select_correction_target
+from .boundary_review import BoundaryReviewSettings
 from .mask_consensus import (
     AUTOMATIC_REFERENCE,
     MaskConsensusSettings,
@@ -227,23 +228,18 @@ def validate_correction_selection(correction_method: str):
 def _find_env_python(env_name: str):
     try:
         result = subprocess.run(
-            [get_env_cmd(), "env", "list", "--json"],
+            [get_env_cmd(), "run", "-n", env_name, "python", "-c", "import sys; print(sys.executable)"],
             check=True,
             capture_output=True,
             text=True,
             env=get_subprocess_env(),
         )
-        envs = json.loads(result.stdout).get("envs", [])
+        python_path = Path(result.stdout.strip())
     except Exception:
         return None
 
-    for env_path in envs:
-        prefix = Path(env_path)
-        if prefix.name.lower() != env_name.lower():
-            continue
-        python_path = prefix / ("python.exe" if os.name == "nt" else "bin/python")
-        if python_path.exists():
-            return str(python_path)
+    if python_path.is_file():
+        return str(python_path)
     return None
 
 def _correction_subprocess_env():
@@ -397,6 +393,12 @@ def _configure_correction_widget(widget):
         widget.primary_tracker.visible = bool(
             widget.consensus_assistance.value
         )
+        tracking_enabled = bool(widget.consensus_assistance.value)
+        widget.check_interior_ends.visible = tracking_enabled
+        widget.check_interior_starts.visible = tracking_enabled
+        widget.border_margin.visible = tracking_enabled and bool(
+            widget.check_interior_ends.value or widget.check_interior_starts.value
+        )
         mask_enabled = bool(widget.mask_consensus_assistance.value)
         widget.mask_reference_model.visible = mask_enabled
         widget.mask_consensus_mode.visible = mask_enabled
@@ -409,6 +411,8 @@ def _configure_correction_widget(widget):
         widget.mask_priority_iou.visible = custom_enabled
 
     widget.consensus_assistance.changed.connect(update_visibility)
+    widget.check_interior_ends.changed.connect(update_visibility)
+    widget.check_interior_starts.changed.connect(update_visibility)
     widget.mask_consensus_assistance.changed.connect(update_visibility)
     widget.mask_consensus_mode.changed.connect(update_visibility)
     update_visibility()
@@ -420,6 +424,9 @@ def _configure_correction_widget(widget):
                correction_method={"choices": get_correction_methods, "label": "Correction Tool"},
                consensus_assistance={"label": "Tracking consensus assistance"},
                primary_tracker={"choices": get_primary_tracking_methods, "label": "Primary Tracking Result"},
+               check_interior_ends={"label": "Review track endings inside the field"},
+               check_interior_starts={"label": "Also review new tracks inside the field"},
+               border_margin={"label": "Border margin (pixels)", "min": 0.0, "max": 10000.0, "step": 1.0},
                mask_consensus_assistance={"label": "Mask consensus assistance"},
                mask_reference_model={"choices": get_mask_reference_methods, "label": "Mask Reference"},
                mask_consensus_mode={"choices": [MASK_MODE_AUTOMATIC, MASK_MODE_CUSTOM], "label": "Mask Settings"},
@@ -432,6 +439,9 @@ def make_correction_widget(
     correction_method: str = CORRECTION_PLACEHOLDER,
     consensus_assistance: bool = False,
     primary_tracker: str = AUTO_PRIMARY_TRACKER,
+    check_interior_ends: bool = True,
+    check_interior_starts: bool = False,
+    border_margin: float = 15.0,
     mask_consensus_assistance: bool = False,
     mask_reference_model: str = AUTOMATIC_REFERENCE,
     mask_consensus_mode: str = MASK_MODE_AUTOMATIC,
@@ -505,6 +515,11 @@ def make_correction_widget(
                         out_dir,
                         primary,
                         True,
+                        boundary_settings=(BoundaryReviewSettings(
+                            check_ends=check_interior_ends,
+                            check_starts=check_interior_starts,
+                            edge_margin_px=float(border_margin),
+                        ) if check_interior_ends or check_interior_starts else None),
                         callback=report_progress,
                         cancel_check=progress.wasCanceled,
                     )

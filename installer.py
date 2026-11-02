@@ -287,7 +287,11 @@ def install_correction_plugin(
     if dependencies_ready:
         print(f"[Build] Dependencies in {env_name} are already available. Skipping pip installation.")
     else:
-        if plugin_name == "MMV_H4Tracks" and get_hardware() == "cuda":
+        if (
+            plugin_name == "MMV_H4Tracks"
+            and get_hardware() == "cuda"
+            and not _imports_ready(conda_cmd, env_name, ["torch"])
+        ):
             _pip_install(conda_cmd, env_name, ["torch==2.7.1", "torchvision==0.22.1", "--index-url", "https://download.pytorch.org/whl/cu118"])
         deps_list = dependencies.split()
         if deps_list:

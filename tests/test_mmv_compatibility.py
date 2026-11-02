@@ -25,12 +25,13 @@ def mmv_template():
 
 
 class MMVInstallationTests(unittest.TestCase):
-    def run_install(self, tool, compatible):
+    def run_install(self, tool, compatible, hardware="cpu", exists=True, imports_ready=True):
         with tempfile.TemporaryDirectory() as temporary, ExitStack() as stack:
             stack.enter_context(patch.object(installer, "get_conda_cmd", return_value="conda"))
-            stack.enter_context(patch.object(installer, "get_hardware", return_value="cpu"))
-            stack.enter_context(patch.object(installer, "env_exists", return_value=True))
-            stack.enter_context(patch.object(installer, "_imports_ready", return_value=True))
+            stack.enter_context(patch.object(installer, "get_hardware", return_value=hardware))
+            stack.enter_context(patch.object(installer, "env_exists", return_value=exists))
+            stack.enter_context(patch.object(installer, "_imports_ready", return_value=imports_ready))
+            stack.enter_context(patch.object(installer.subprocess, "run"))
             check = stack.enter_context(patch.object(installer, "mmv_dependencies_compatible", return_value=compatible))
             pip = stack.enter_context(patch.object(installer, "_pip_install"))
             stack.enter_context(patch.object(installer, "_verify_imports"))
@@ -49,6 +50,13 @@ class MMVInstallationTests(unittest.TestCase):
 
     def test_other_correction_environment_is_not_changed(self):
         self.assertEqual(self.run_install("napari-amdtrk", False), (0, 0))
+
+    def test_pandas_repair_keeps_an_importable_existing_torch(self):
+        self.assertEqual(self.run_install("MMV_H4Tracks", False, hardware="cuda"), (1, 1))
+
+    def test_fresh_nvidia_environment_gets_the_compatible_torch_build(self):
+        self.assertEqual(self.run_install("MMV_H4Tracks", False, hardware="cuda",
+                                         exists=False, imports_ready=False), (2, 0))
 
     def test_launcher_does_not_skip_mmv_dependency_repair(self):
         with patch.object(launcher, "run_capture", return_value="READY\n"), patch.object(

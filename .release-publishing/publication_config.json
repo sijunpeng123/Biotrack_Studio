@@ -1,0 +1,24 @@
+{
+  "repository": "sijunpeng123/Biotrack_Studio",
+  "approved_source": "714897020703bd61b1ebbf76608473a227ba4dfb",
+  "main_commit": "23011624493713341f3b2da7bfd07f9f6a54340c",
+  "approved_tree": "3a3fa31056f92911798e993f36464973a53dcbba",
+  "tag": "v1.0.0",
+  "old_tag_object": "a08f453e3d0a1d449e3fc551c962ed99b0e525f7",
+  "release_id": 402537488,
+  "old_asset_id": 666649277,
+  "old_asset_sha256": "7a6615facee58b8aaa6e96697ec6e9d0b1c16aa8e22124cebd71266d6b710981",
+  "staging_run": 41496192674,
+  "staging_artifact_id": 13166168452,
+  "author_approval": "批准合并 main、同步标签并替换正式安装包",
+  "archives": {
+    "BioTrack_Studio_v1.0.0.zip": {
+      "sha256": "82b680ca4a4c58ec162fc10e31314bfcd36faf81c0abcffd3424858ef9050e30",
+      "bytes": 273824146
+    },
+    "BioTrack_Studio_v1.0.0_GitHub_Source.zip": {
+      "sha256": "2f2bf031708822f7ff4b5dceae29332f5fadbcba9fa8edb6f69fb3a5300a6ef7",
+      "bytes": 5722059
+    }
+  }
+}

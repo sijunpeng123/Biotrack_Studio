@@ -1,4 +1,4 @@
-name: Publish author-approved v1.0.0 release
+name: Verify published author-approved v1.0.0 release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
     paths: [.github/workflows/publish-approved-release.yml]
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 jobs:
@@ -19,20 +19,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/download-artifact@v4
-        with:
-          repository: sijunpeng123/Biotrack_Studio
-          run-id: 41496192674
-          name: BioTrack_Studio_v1.0.0_reviewed_7148970
-          github-token: ${{ github.token }}
-          path: ${{ runner.temp }}/biotrack_approved_archives
-      - name: Publish exact approved archives after merged-main CI
+      - name: Read-only verification of published release and retained backup
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python .release-publishing/publish_approved_release.py
+        run: python .release-publishing/finalize_approved_release.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: BioTrack_v1.0.0_publication_verification
+          name: BioTrack_v1.0.0_final_publication_verification
           retention-days: 30
           path: ${{ runner.temp }}/biotrack_publication_records/*.json
